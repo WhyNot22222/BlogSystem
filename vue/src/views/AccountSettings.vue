@@ -273,16 +273,6 @@ const contactRules = {
   ]
 };
 
-const notificationSettings = reactive({
-  systemAnnouncements: true,
-  securityAlerts: true,
-  newComments: true,
-  likes: true,
-  follows: true,
-  inApp: true,
-  email: false
-});
-
 const passwordStrength = computed(() => {
   const password = securityForm.newPassword;
 

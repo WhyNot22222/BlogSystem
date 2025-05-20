@@ -15,8 +15,8 @@ public class Post {
     private Long userId;
     private Long categoryId;
     private Boolean allowComments;
-    private Boolean isPublic;
-    private Boolean isPinned;
+    private Boolean isPinned = false;
+    private Boolean isPublic = true;
 
     public Long getId() {
         return id;

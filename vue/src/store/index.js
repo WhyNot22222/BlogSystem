@@ -29,25 +29,26 @@ export default createStore({
       const token = localStorage.getItem('token')
       
       if (userId && token) {
-        // 确保使用正确的属性名设置用户ID
         commit('SET_USER', { 
-          id: userId
+          id: userId,
+          // 添加从本地存储获取的草稿ID
+          draftId: localStorage.getItem('draftId') || null
         })
-        
-        // 可以选择性地从后端获取完整的用户信息
-        // 这里可以添加一个API调用来获取用户详细信息
       }
     },
     // 登出操作
     logout({ commit }) {
       localStorage.removeItem('userId')
       localStorage.removeItem('token')
+      // 登出时也清除草稿ID
+      localStorage.removeItem('draftId')
       commit('CLEAR_USER')
     }
   },
   getters: {
-    // 确保返回正确的用户ID
     userId: state => state.user.id || null,
-    isAuthenticated: state => !!state.user.id
+    isAuthenticated: state => !!state.user.id,
+    // 新增获取草稿ID的getter
+    draftId: state => state.user.draftId || null
   }
 })

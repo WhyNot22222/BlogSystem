@@ -22,6 +22,8 @@ public class PostController {
             Post createdPost = postService.createPost(post);
             return Result.success(createdPost);
         } catch (Exception e) {
+            System.out.println("创建文章异常：" + e.getMessage());
+            e.printStackTrace();
             return Result.error("500", "创建文章失败：" + e.getMessage());
         }
     }

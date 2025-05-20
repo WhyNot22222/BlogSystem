@@ -4,16 +4,28 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.yn.mapper.PostMapper">
 
-    <insert id="insertPost" parameterType="com.yn.entity.Post">
-        INSERT INTO posts (title, content, summary, cover_url, status, user_id, category_id, allow_comments, is_public, is_pinned)
-        VALUES (#{title}, #{content}, #{summary}, #{coverUrl}, #{status}, #{userId}, #{categoryId}, #{allowComments}, #{isPublic}, #{isPinned})
+    <insert id="insertPost" parameterType="com.yn.entity.Post" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO posts (
+            title, content, summary, cover_url, 
+            status, user_id, category_id, 
+            allow_comments, is_public, is_pinned,
+            created_at, updated_at  <!-- 新增字段 -->
+        )
+        VALUES (
+            #{title}, #{content}, #{summary}, #{coverUrl}, 
+            #{status}, #{userId}, #{categoryId}, 
+            #{allowComments}, #{isPublic}, #{isPinned},
+            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP  <!-- 设置默认时间 -->
+        )
     </insert>
 
     <update id="updatePost" parameterType="com.yn.entity.Post">
-        UPDATE posts
-        SET title = #{title}, content = #{content}, summary = #{summary}, cover_url = #{coverUrl},
-            status = #{status}, category_id = #{categoryId}, allow_comments = #{allowComments},
-            is_public = #{isPublic}, is_pinned = #{isPinned}, updated_at = CURRENT_TIMESTAMP
+        UPDATE posts SET
+            title = #{title}, content = #{content}, 
+            summary = #{summary}, cover_url = #{coverUrl},
+            status = #{status}, category_id = #{categoryId}, 
+            allow_comments = #{allowComments}, is_public = #{isPublic}, 
+            is_pinned = #{isPinned}, updated_at = CURRENT_TIMESTAMP  <!-- 更新时自动更新时间 -->
         WHERE id = #{id}
     </update>
 

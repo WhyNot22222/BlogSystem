@@ -20,7 +20,6 @@ import java.util.Optional;
 @RequestMapping("/file")
 public class FileController {
 
-    // 新增获取头像接口
     @GetMapping("/getAvatar")
     public Result getAvatar(@RequestParam Long userId) {
         try {
@@ -29,16 +28,12 @@ public class FileController {
                 .filter(path -> path.getFileName().toString().startsWith("avatar."))
                 .findFirst();
     
-            byte[] imageBytes;
             if (avatarFile.isEmpty()) {
-                Resource defaultAvatar = new ClassPathResource("static/default.jpg");
-                imageBytes = StreamUtils.copyToByteArray(defaultAvatar.getInputStream());
-            } else {
-                Resource imageResource = new UrlResource(avatarFile.get().toUri());
-                imageBytes = StreamUtils.copyToByteArray(imageResource.getInputStream());
+                return Result.error("未找到用户头像");
             }
-            
-            // 将图片数据转换为 Base64 字符串
+    
+            Resource imageResource = new UrlResource(avatarFile.get().toUri());
+            byte[] imageBytes = StreamUtils.copyToByteArray(imageResource.getInputStream());
             String base64Image = java.util.Base64.getEncoder().encodeToString(imageBytes);
             return Result.success(base64Image);
             
@@ -51,7 +46,7 @@ public class FileController {
     @PostMapping("/uploadAvatar")
     public Result uploadAvatar(
             @RequestParam("file") MultipartFile file,
-            @RequestParam Long userId) {  // 新增用户ID参数
+            @RequestParam Long userId) {
         try {
             String projectRoot = System.getProperty("user.dir");
             // 按用户ID创建独立目录
@@ -79,6 +74,73 @@ public class FileController {
         } catch (Exception e) {
             e.printStackTrace();
             return Result.error("头像上传失败: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/uploadCover")
+    public Result uploadCover(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(required = false) Long userId, // 允许空值
+            @RequestParam(required = false) Long postId) { 
+        try {
+            // 添加参数校验
+            if (userId == null) {
+                return Result.error("用户ID不能为空");
+            }
+            if (postId == null) {
+                return Result.error("文章ID不能为空");
+            }
+            String projectRoot = System.getProperty("user.dir");
+            // 按用户和文章ID创建目录结构
+            String storagePath = String.format("uploads/user_%d/post_%d/covers", userId, postId);
+            String uploadDir = projectRoot + "/" + storagePath;
+            
+            File storageDir = new File(uploadDir);
+            if (!storageDir.exists()) {
+                System.out.println("创建封面目录: " + storageDir.mkdirs());
+            }
+
+            // 固定文件名格式：cover.ext
+            String fileExtension = file.getOriginalFilename()
+                    .substring(file.getOriginalFilename().lastIndexOf("."));
+            String fileName = "cover" + fileExtension;
+            String filePath = uploadDir + '/' + fileName;
+            
+            File dest = new File(filePath);
+            if (dest.exists()) {
+                Files.delete(dest.toPath()); // 删除已存在的封面
+            }
+            file.transferTo(dest);
+            
+            return Result.success("/cover/user_" + userId + "/post_" + postId + "/" + fileName);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("封面上传失败: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/getCover")
+    public Result getCover(
+        @RequestParam Long userId, 
+        @RequestParam Long postId) {
+        try {
+            String uploadDir = String.format("E:\\IdeaProjects\\DesignPatterns\\uploads\\user_%d\\post_%d\\covers", userId, postId);
+            Optional<Path> coverFile = Files.list(Paths.get(uploadDir))
+                    .filter(path -> path.getFileName().toString().startsWith("cover."))
+                    .findFirst();
+    
+            if (coverFile.isEmpty()) {
+                return Result.error("未找到文章封面");
+            }
+    
+            Resource imageResource = new UrlResource(coverFile.get().toUri());
+            byte[] imageBytes = StreamUtils.copyToByteArray(imageResource.getInputStream());
+            String base64Image = java.util.Base64.getEncoder().encodeToString(imageBytes);
+            return Result.success(base64Image);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("封面获取失败: " + e.getMessage());
         }
     }
 

@@ -14,5 +14,9 @@ public class WebConfig implements WebMvcConfigurer {
         String uploadDir = "E:\\IdeaProjects\\DesignPatterns\\uploads\\avatars";
         registry.addResourceHandler("/avatar/**")
                 .addResourceLocations("file:" + uploadDir + File.separator);
+        
+        String coverDir = "E:\\IdeaProjects\\DesignPatterns\\uploads";
+        registry.addResourceHandler("/cover/**")
+            .addResourceLocations("file:" + coverDir + File.separator);
     }
 }

@@ -6,7 +6,7 @@
         <button class="back-button" @click="goBack">
           <el-icon><ArrowLeft /></el-icon>
         </button>
-        <h1 class="editor-title">创建新博客</h1>
+        <h1 class="editor-title">{{ postId ? '编辑博客' : '创建新博客' }}</h1>
       </div>
       <div class="header-center">
         <el-tag v-if="postStatus === 'draft'" type="info" effect="plain" class="status-tag">草稿</el-tag>
@@ -297,16 +297,15 @@
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted, onBeforeUnmount, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import {ref, nextTick, onMounted, onBeforeUnmount, computed} from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import request from '@/utils/request'
 import {
   ArrowLeft,
   ArrowDown,
   Plus,
   Picture,
-  VideoCamera,
-  Link,
   Document,
   Delete,
   View,
@@ -317,9 +316,15 @@ import {
   PriceTag,
   Upload
 } from '@element-plus/icons-vue'
-import request from '@/utils/request'
+import {useStore} from "vuex";
+import defaultAvatar from "@/imgs/default.jpg";
+
+const store = useStore();
+const userId = computed(() => store.getters.userId)
 
 const router = useRouter()
+const route = useRoute()
+const postId = ref(null)
 const blogTitle = ref('')
 const blogSummary = ref('')
 const blogContent = ref('')
@@ -327,73 +332,96 @@ const category = ref('')
 const coverUrl = ref('')
 const allowComments = ref(true)
 const isPublic = ref(true)
-const isOriginal = ref(true)
 const isPinned = ref(false)
 const hasUnsavedChanges = ref(false)
 const autoSaveInterval = ref(null)
 const lastSavedTime = ref(null)
 const previewVisible = ref(false)
-
-// 文章状态
-const postStatus = ref('draft') // draft, published, archived
+const postStatus = ref('draft')
 const createdAt = ref(new Date())
 const updatedAt = ref(new Date())
 const publishedAt = ref(null)
-const authorName = ref('当前用户') // 这里应该从用户系统获取
-
-// 分类选项
-const categories = [
-  { value: 'info', label: '资讯' },
-  { value: 'tech', label: '技术' },
-  { value: 'operation', label: '运维' },
-  { value: 'ai', label: '人工智能' },
-  { value: 'java', label: 'Java' },
-  { value: 'python', label: 'Python' },
-  { value: 'frontend', label: '前端' },
-  { value: 'backend', label: '后端' }
-];
-
-// 获取分类标签
-const getCategoryLabel = (value) => {
-  const category = categories.find(item => item.value === value)
-  return category ? category.label : '未分类'
-}
-
-// 标签相关
+const authorName = ref('当前用户') // 假设从认证系统获取
 const dynamicTags = ref([])
 const inputVisible = ref(false)
 const inputValue = ref('')
 const tagInput = ref(null)
+const categories = ref([])
+
+// 获取分类列表
+const fetchCategories = async () => {
+  try {
+    const response = await request.get('/categories')
+    if (response.code === '200') {
+      categories.value = response.data.map(item => ({
+        value: item.id,
+        label: item.name
+      }))
+    } else {
+      ElMessage.error(response.msg || '获取分类失败')
+    }
+  } catch (error) {
+    ElMessage.error('获取分类失败，请检查网络连接')
+    console.error('Fetch categories error:', error)
+  }
+}
+
+// 获取文章数据
+const fetchPost = async (id) => {
+  try {
+    const response = await request.get(`/posts/${id}`)
+    if (response.code === '200') {
+      const post = response.data
+      postId.value = post.id
+      blogTitle.value = post.title
+      blogSummary.value = post.summary
+      blogContent.value = post.content
+      category.value = post.categoryId
+      coverUrl.value = post.coverUrl
+      postStatus.value = post.status
+      createdAt.value = new Date(post.createdAt)
+      updatedAt.value = new Date(post.updatedAt)
+      publishedAt.value = post.publishedAt ? new Date(post.publishedAt) : null
+      allowComments.value = post.allowComments
+      isPublic.value = post.isPublic
+      isPinned.value = post.isPinned
+      dynamicTags.value = post.tags || []
+      hasUnsavedChanges.value = false
+    } else {
+      ElMessage.error(response.msg || '获取文章失败')
+    }
+  } catch (error) {
+    ElMessage.error('获取文章失败，请检查网络连接')
+    console.error('Fetch post error:', error)
+  }
+}
 
 // 获取状态文本
 const getStatusText = (status) => {
   const statusMap = {
     'draft': '草稿',
-    'published': '已发布',
+    'published': '已发布'
   }
   return statusMap[status] || '草稿'
 }
 
 // 处理状态变更
-const handleStatusChange = (command) => {
+const handleStatusChange = async (command) => {
   postStatus.value = command
-
   if (command === 'published' && !publishedAt.value) {
     publishedAt.value = new Date()
   }
-
   hasUnsavedChanges.value = true
+  await saveDraft() // 立即保存状态变更
   ElMessage.success(`状态已更改为${getStatusText(command)}`)
 }
 
 // 格式化日期
 const formatDate = (date) => {
   if (!date) return '未设置'
-
   if (typeof date === 'string') {
     date = new Date(date)
   }
-
   return new Intl.DateTimeFormat('zh-CN', {
     year: 'numeric',
     month: '2-digit',
@@ -406,10 +434,8 @@ const formatDate = (date) => {
 // 格式化时间（相对时间）
 const formatTime = (date) => {
   if (!date) return ''
-
   const now = new Date()
-  const diff = Math.floor((now - date) / 1000) // 秒数差
-
+  const diff = Math.floor((now - date) / 1000)
   if (diff < 60) {
     return '刚刚'
   } else if (diff < 3600) {
@@ -421,6 +447,7 @@ const formatTime = (date) => {
   }
 }
 
+// 标签相关
 const handleClose = (tag) => {
   dynamicTags.value.splice(dynamicTags.value.indexOf(tag), 1)
   hasUnsavedChanges.value = true
@@ -431,7 +458,6 @@ const showInput = () => {
     ElMessage.warning('最多添加5个标签')
     return
   }
-
   inputVisible.value = true
   nextTick(() => {
     tagInput.value.focus()
@@ -446,14 +472,11 @@ const handleInputConfirm = () => {
       inputVisible.value = false
       return
     }
-
-    // 检查标签是否已存在
     if (dynamicTags.value.includes(inputValue.value)) {
       ElMessage.warning('标签已存在')
       inputValue.value = ''
       return
     }
-
     dynamicTags.value.push(inputValue.value)
     hasUnsavedChanges.value = true
   }
@@ -465,7 +488,6 @@ const handleInputConfirm = () => {
 const beforeCoverUpload = (file) => {
   const isImage = file.type.startsWith('image/')
   const isLt2M = file.size / 1024 / 1024 < 2
-
   if (!isImage) {
     ElMessage.error('封面图片只能是图片格式!')
     return false
@@ -477,15 +499,64 @@ const beforeCoverUpload = (file) => {
   return true
 }
 
-const uploadCover = (options) => {
-  const file = options.file
-  // 这里应该是上传到服务器的逻辑，这里简化为本地预览
-  const reader = new FileReader()
-  reader.readAsDataURL(file)
-  reader.onload = () => {
-    coverUrl.value = reader.result
-    hasUnsavedChanges.value = true
-    ElMessage.success('封面上传成功')
+// request.get('/file/getCover', {
+//   params: {
+//     userId: 1,
+//     postId: 8
+//   },
+//   responseType: 'json'
+// }).then(res => {
+//   if (res.code === '200') {
+//     console.log("请求封面成功")
+//   } else {
+//     ElMessage.error('封面加载失败：' + res.msg);
+//   }
+// })
+
+const uploadCover = async ({ file }) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('type', 'cover')
+  console.log('userId: ', userId, 'postId: ', postId)
+  
+  try {
+    const response = await request.post('/file/uploadCover', formData, {
+      params: {
+        userId: userId.value,
+        postId: postId.value,
+      },
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      onUploadProgress: progressEvent => {
+        const percentCompleted = Math.round(
+          (progressEvent.loaded * 100) / progressEvent.total
+        )
+        ElMessage.info(`上传进度: ${percentCompleted}%`)
+      }
+    })
+
+    if (response.code === '200') {
+      coverUrl.value = response.data.fullUrl
+      hasUnsavedChanges.value = true
+      ElMessage.success('封面上传成功')
+    } else {
+      ElMessage.error(response.msg || '上传封面失败')
+    }
+  } catch (error) {
+    if (error.response) {
+      const status = error.response.status
+      if (status === 413) {
+        ElMessage.error('文件大小超过限制')
+      } else if (status === 415) {
+        ElMessage.error('不支持的媒体类型')
+      } else {
+        ElMessage.error('上传封面失败')
+      }
+    } else {
+      ElMessage.error('网络连接异常')
+    }
+    console.error('Upload cover error:', error)
   }
 }
 
@@ -495,25 +566,6 @@ const removeCover = () => {
   ElMessage.success('封面已移除')
 }
 
-// 自动保存功能
-const setupAutoSave = () => {
-  autoSaveInterval.value = setInterval(() => {
-    if (hasUnsavedChanges.value && blogTitle.value) {
-      autoSaveDraft()
-    }
-  }, 60000) // 每分钟自动保存一次
-}
-
-const autoSaveDraft = () => {
-  // 这里应该是自动保存草稿的API调用
-  console.log('自动保存草稿:', getPostData())
-
-  lastSavedTime.value = new Date()
-  updatedAt.value = new Date()
-  hasUnsavedChanges.value = false
-  // 不显示消息，静默保存
-}
-
 // 获取文章数据
 const getPostData = () => {
   return {
@@ -521,18 +573,123 @@ const getPostData = () => {
     content: blogContent.value,
     summary: blogSummary.value,
     status: postStatus.value,
-    created_at: createdAt.value,
-    updated_at: new Date(),
-    published_at: publishedAt.value,
-    category: category.value,
+    createdAt: createdAt.value,
+    updatedAt: new Date(),
+    publishedAt: publishedAt.value,
+    categoryId: category.value,
     tags: dynamicTags.value,
-    cover_url: coverUrl.value,
-    allow_comments: allowComments.value,
-    is_public: isPublic.value,
-    is_original: isOriginal.value,
-    is_pinned: isPinned.value,
-    custom_url: customUrl.value
+    coverUrl: coverUrl.value,
+    allowComments: !!allowComments.value,
+    isPublic: !!isPublic.value,
+    isPinned: !!isPinned.value,
+    userId: userId.value
   }
+}
+
+// 保存草稿
+const saveDraft = async () => {
+  if (!blogTitle.value) {
+    ElMessage.warning('请输入文章标题')
+    return
+  }
+  const postData = getPostData()
+  console.log('保存草稿——postData: ', postData)
+  try {
+    let response
+    if (postId.value) {
+      // 已有postId时执行更新操作
+      response = await request.put(`/posts/${Number(postId.value)}`, postData) // 确保ID为数字
+    } else {
+      // 没有postId时创建新草稿
+      response = await request.post('/posts', postData)
+    }
+    if (response.code === '200') {
+      if (!postId.value) {
+        // 新创建草稿时存储ID到本地
+        localStorage.setItem('draftId', String(response.data.id)) // 存储为字符串
+      }
+      // 更新postId为当前草稿ID
+      postId.value = Number(response.data.id || postId.value) // 转换为数字
+      lastSavedTime.value = new Date()
+      updatedAt.value = new Date()
+      hasUnsavedChanges.value = false
+      ElMessage.success('保存草稿成功')
+    } else {
+      ElMessage.error(response.msg || '保存草稿失败')
+    }
+  } catch (error) {
+    ElMessage.error('保存草稿失败，请检查网络连接')
+    console.error('Save draft error:', error)
+  }
+}
+
+// 自动保存
+const setupAutoSave = () => {
+  autoSaveInterval.value = setInterval(() => {
+    if (hasUnsavedChanges.value && blogTitle.value) {
+      saveDraft()
+    }
+  }, 60000)
+}
+
+// 发布文章
+const publishBlog = async () => {
+  if (!blogTitle.value) {
+    ElMessage.warning('请输入文章标题')
+    return
+  }
+  if (!blogContent.value) {
+    ElMessage.warning('请输入文章内容')
+    return
+  }
+  if (!category.value) {
+    ElMessage.warning('请选择文章分类')
+    return
+  }
+  const postData = getPostData()
+  console.log('发布文章——postData: ', postData)
+  postData.status = 'published'
+  if (!postData.publishedAt) {
+    postData.publishedAt = new Date()
+  }
+  console.log('postData: ', postData)
+  try {
+    let response
+    if (postId.value) {
+      response = await request.put(`/posts/${postId.value}`, postData)
+    } else {
+      response = await request.post('/posts', postData)
+    }
+    if (response.code === '200') {
+      localStorage.removeItem('draftId')
+      postId.value = response.data.id
+      postStatus.value = 'published'
+      publishedAt.value = new Date(postData.publishedAt)
+      lastSavedTime.value = new Date()
+      updatedAt.value = new Date()
+      hasUnsavedChanges.value = false
+      ElMessage.success('文章发布成功')
+      setTimeout(() => {
+        router.push('/posts')
+      }, 1500)
+    } else {
+      ElMessage.error(response.msg || '发布文章失败')
+    }
+  } catch (error) {
+    ElMessage.error('发布文章失败，请检查网络连接')
+    console.error('Publish blog error:', error)
+  }
+}
+
+// 预览文章
+const previewPost = () => {
+  previewVisible.value = true
+}
+
+// 获取分类标签
+const getCategoryLabel = (value) => {
+  const cat = categories.value.find(item => item.value === value)
+  return cat ? cat.label : '未分类'
 }
 
 // 返回按钮
@@ -547,69 +704,13 @@ const goBack = () => {
           type: 'warning'
         }
     ).then(() => {
-      window.close() // 关闭当前标签页
+      router.push('/posts')
     }).catch(() => {
-      // 用户取消，不做任何操作
+      // 用户取消
     })
   } else {
-    window.close() // 关闭当前标签页
+    router.push('/posts')
   }
-}
-
-// 保存草稿
-const saveDraft = () => {
-  if (!blogTitle.value) {
-    ElMessage.warning('请输入文章标题')
-    return
-  }
-
-  // 这里应该是保存草稿的API调用
-  console.log('保存文章:', getPostData())
-
-  lastSavedTime.value = new Date()
-  updatedAt.value = new Date()
-
-  ElMessage.success('保存成功')
-  hasUnsavedChanges.value = false
-}
-
-// 发布文章
-const publishBlog = () => {
-  if (!blogTitle.value) {
-    ElMessage.warning('请输入文章标题')
-    return
-  }
-
-  if (!blogContent.value) {
-    ElMessage.warning('请输入文章内容')
-    return
-  }
-
-  if (!category.value) {
-    ElMessage.warning('请选择文章分类')
-    return
-  }
-
-  // 设置状态为已发布
-  postStatus.value = 'published'
-
-  // 如果没有设置发布时间，则设置为当前时间
-  if (!publishedAt.value) {
-    publishedAt.value = new Date()
-  }
-
-  // 这里应该是发布文章的API调用
-  console.log('发布文章:', getPostData())
-
-  ElMessage.success('文章发布成功')
-  setTimeout(() => {
-    window.close() // 发布成功后关闭当前标签页
-  }, 1500)
-}
-
-// 预览文章
-const previewPost = () => {
-  previewVisible.value = true
 }
 
 // 监听内容变化
@@ -617,17 +718,12 @@ const watchContentChanges = () => {
   const handleChange = () => {
     hasUnsavedChanges.value = true
   }
-
-  // 监听标题和内容变化
   const titleInput = document.querySelector('.title-input input')
   const summaryTextarea = document.querySelector('.summary-input textarea')
   const contentTextarea = document.querySelector('.content-input textarea')
-
   if (titleInput) titleInput.addEventListener('input', handleChange)
   if (summaryTextarea) summaryTextarea.addEventListener('input', handleChange)
   if (contentTextarea) contentTextarea.addEventListener('input', handleChange)
-
-  // 清理函数
   return () => {
     if (titleInput) titleInput.removeEventListener('input', handleChange)
     if (summaryTextarea) summaryTextarea.removeEventListener('input', handleChange)
@@ -637,31 +733,39 @@ const watchContentChanges = () => {
 
 // 生命周期钩子
 onMounted(() => {
-  let cleanup;
+  // 从本地存储获取草稿ID
+  const savedDraftId = localStorage.getItem('draftId')
+  if (savedDraftId && savedDraftId !== 'null' && !isNaN(savedDraftId)) {
+    postId.value = Number(savedDraftId) // 确保转换为数字类型
+    fetchPost(postId.value)
+  }
+
+  let cleanup
   try {
-    cleanup = watchContentChanges();
+    cleanup = watchContentChanges()
   } catch (error) {
-    console.error("Error setting up content change watchers:", error);
-    cleanup = () => {}; // Provide a no-op cleanup function in case of error
+    console.error("Error setting up content change watchers:", error)
+    cleanup = () => {}
   }
   setupAutoSave()
-
-  // 添加页面关闭前的提示
+  fetchCategories()
+  if (route.params.id) {
+    postId.value = route.params.id
+    fetchPost(postId.value)
+  }
   window.addEventListener('beforeunload', (e) => {
     if (hasUnsavedChanges.value) {
       e.preventDefault()
-      e.returnValue = ''
     }
+    localStorage.removeItem('draftId')
   })
 
   onBeforeUnmount(() => {
     cleanup()
     clearInterval(autoSaveInterval.value)
-
     window.removeEventListener('beforeunload', (e) => {
       if (hasUnsavedChanges.value) {
         e.preventDefault()
-        e.returnValue = ''
       }
     })
   })
@@ -944,17 +1048,17 @@ onMounted(() => {
   color: #1890ff;
 }
 
-.info-item, .seo-item {
+.info-item {
   margin-bottom: 14px;
   display: flex;
   flex-direction: column;
 }
 
-.info-item:last-child, .seo-item:last-child {
+.info-item:last-child {
   margin-bottom: 0;
 }
 
-.info-label, .seo-label, .setting-label {
+.info-label, .setting-label {
   font-size: 14px;
   color: #595959;
   margin-bottom: 6px;
