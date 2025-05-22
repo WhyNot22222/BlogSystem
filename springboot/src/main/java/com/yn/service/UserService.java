@@ -111,4 +111,14 @@ public class UserService {
         userMapper.updateEmail(userId, newEmail);
         return Result.success("邮箱更新成功");
     }
+
+    // 获取用户信息
+    public Result getUser(Long userId) {
+        User user = userMapper.findById(userId);
+        if (user != null) {
+            return Result.success(user);
+        } else {
+            return Result.error("用户不存在");
+        }
+    }
 }

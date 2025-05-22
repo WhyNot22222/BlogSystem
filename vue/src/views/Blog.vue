@@ -11,121 +11,41 @@
 
     <!-- Main Content Area -->
     <div class="content-container">
+      <!-- Loading 状态 -->
+      <div v-if="loading" class="loading-container">
+        正在加载数据...
+      </div>
+      
+      <!-- Error 状态 -->
+      <div v-if="error" class="error-container">
+        {{ error }}
+      </div>
+
       <!-- Blog List -->
-      <div class="blog-list">
-        <!-- Blog Item 1 -->
-        <div class="blog-item">
+      <div v-else class="blog-list">
+        <div v-for="post in posts" :key="post.id" class="blog-item">
           <div class="author-info">
-            <el-avatar :size="36" src="/placeholder.svg?height=36&width=36" class="author-avatar"></el-avatar>
-            <span class="author-name">源鸿星空</span>
+            <el-avatar :size="36" :src="post.authorAvatar">
+              <img :src=avatarUrl alt="用户头像">
+            </el-avatar>
+            <span class="author-name">{{ post.authorName }}</span>
           </div>
-
           <div class="blog-content">
-            <h2 class="blog-title">PyTorch 入门与核心概念详解：从基础到实战问题解决</h2>
-            <p class="blog-desc">用PyTorch 编写 Transformer 模型时遇到了多个错误，包括维度不匹配、NaN 损失、注意力权重未记录等问题...</p>
+            <h2 class="blog-title">{{ post.title }}</h2>
+            <p class="blog-desc">{{ post.summary }}</p>
 
             <div class="blog-meta">
               <span class="meta-item">
                 <el-icon><View /></el-icon>
-                阅读 760
+                阅读 {{ post.viewCount }}
               </span>
               <span class="meta-item">
                 <el-icon><Thumb /></el-icon>
-                38 赞
+                {{ post.likeCount }} 赞
               </span>
               <span class="meta-item">
                 <el-icon><Collection /></el-icon>
-                收藏 33
-              </span>
-              <el-dropdown>
-                <span class="more-actions">
-                  <el-icon><MoreFilled /></el-icon>
-                </span>
-                <template #dropdown>
-                  <el-dropdown-menu>
-                    <el-dropdown-item>举报</el-dropdown-item>
-                    <el-dropdown-item>不感兴趣</el-dropdown-item>
-                  </el-dropdown-menu>
-                </template>
-              </el-dropdown>
-            </div>
-          </div>
-        </div>
-
-        <!-- Blog Item 2 -->
-        <div class="blog-item">
-          <div class="author-info">
-            <el-avatar :size="36" src="/placeholder.svg?height=36&width=36" class="author-avatar"></el-avatar>
-            <span class="author-name">CS创新实验室</span>
-          </div>
-
-          <div class="blog-content">
-            <h2 class="blog-title">408考研经题详解：2009年第10题</h2>
-            <p class="blog-desc">所以，如果用二路归并排序算法，第二趟排序之后所得到的序列中，前 4 个关键字应该是有序的，但是...</p>
-
-            <div class="blog-meta">
-              <span class="meta-item">
-                <el-icon><View /></el-icon>
-                阅读 448
-              </span>
-              <span class="meta-item">
-                <el-icon><Thumb /></el-icon>
-                9 赞
-              </span>
-              <span class="meta-item">
-                <el-icon><Collection /></el-icon>
-                收藏 5
-              </span>
-              <el-dropdown>
-                <span class="more-actions">
-                  <el-icon><MoreFilled /></el-icon>
-                </span>
-                <template #dropdown>
-                  <el-dropdown-menu>
-                    <el-dropdown-item>举报</el-dropdown-item>
-                    <el-dropdown-item>不感兴趣</el-dropdown-item>
-                  </el-dropdown-menu>
-                </template>
-              </el-dropdown>
-            </div>
-          </div>
-        </div>
-
-        <!-- Blog Item 3 with Advertisement -->
-        <div class="blog-item ad-item">
-          <div class="blog-content">
-            <h2 class="blog-title">码住了！一文教你玩好豆包AI编程，编程效率原地起飞</h2>
-            <p class="blog-desc">看不懂代码？跟它！写不动代码？问豆包！AI助力，编程从此so easy!</p>
-
-            <div class="ad-banner">
-              <img src="../assets/svgs/placeholder.svg?height=80&width=80 " alt="Advertisement" class="ad-image">
-            </div>
-          </div>
-        </div>
-
-        <!-- Blog Item 4 -->
-        <div class="blog-item">
-          <div class="author-info">
-            <el-avatar :size="36" src="/placeholder.svg?height=36&width=36" class="author-avatar"></el-avatar>
-            <span class="author-name">warm...</span>
-          </div>
-
-          <div class="blog-content">
-            <h2 class="blog-title">Python基础总结(十)之函数</h2>
-            <p class="blog-desc">函数的定义要使用def关键字，def后面紧跟函数名，给出的为函数的代码块，上述即为一个简单的函数，定义了一个名为test的函数...</p>
-
-            <div class="blog-meta">
-              <span class="meta-item">
-                <el-icon><View /></el-icon>
-                阅读 443
-              </span>
-              <span class="meta-item">
-                <el-icon><Thumb /></el-icon>
-                4 赞
-              </span>
-              <span class="meta-item">
-                <el-icon><Collection /></el-icon>
-                收藏 11
+                收藏 {{ post.collectionCount }}
               </span>
               <el-dropdown>
                 <span class="more-actions">
@@ -142,6 +62,7 @@
           </div>
         </div>
       </div>
+      
     </div>
   </div>
 </template>
@@ -154,6 +75,80 @@ import {
   Collection,
   MoreFilled
 } from '@element-plus/icons-vue'
+import request from '@/utils/request'
+
+import { onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+
+const posts = ref([])
+const loading = ref(false)
+const error = ref(null)
+
+const fetchPosts = async () => {
+  try {
+    loading.value = true
+    const res = await request.get('/posts/selectAll')
+    if (res.code === '200') {
+      posts.value = await Promise.all(
+        res.data.map(async item => {
+          try {
+            const userRes = await request.post(`/user/getUser?userId=${item.userId}`)
+            const avatarUrl = await fetchUserAvatar(item.userId)
+            return {
+              id: item.id,
+              title: item.title,
+              summary: item.summary,
+              coverUrl: item.coverUrl,
+              authorName: userRes.data?.username || '未知用户',
+              authorAvatar: avatarUrl || '', // 使用获取到的头像地址
+              viewCount: item.viewCount,
+              likeCount: item.likeCount
+            }
+          } catch (e) {
+            console.error('用户信息获取失败:', e)
+            return {
+              ...item,
+              authorName: '未知用户',
+              authorAvatar: ''
+            }
+          }
+        })
+      )
+    }
+  } catch (err) {
+    error.value = '无法加载文章，请稍后重试'
+  } finally {
+    loading.value = false
+  }
+}
+
+// 头像获取
+const fetchUserAvatar = async (userId) => {
+  try {
+    const res = await request.get('/file/getAvatar', {
+      params: { userId },
+      responseType: 'json'
+    })
+    if (res.code === '200') {
+      const binaryString = window.atob(res.data)
+      const bytes = new Uint8Array(binaryString.length)
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i)
+      }
+      const blob = new Blob([bytes], { type: 'image/jpeg' })
+      return URL.createObjectURL(blob)
+    }
+    return ''
+  } catch (error) {
+    console.error('头像加载失败:', error)
+    return ''
+  }
+}
+
+// 在组件挂载时自动获取数据
+onMounted(() => {
+  fetchPosts()
+})
 </script>
 
 <style scoped>
@@ -298,5 +293,13 @@ import {
   .author-list {
     grid-template-columns: 1fr;
   }
+}
+
+.cover-image {
+  width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 15px;
 }
 </style>

@@ -5,6 +5,8 @@ import com.yn.mapper.PostMapper;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class PostService {
 
@@ -23,5 +25,9 @@ public class PostService {
 
     public Post getPostById(Long id) {
         return postMapper.selectPostById(id);
+    }
+
+    public List<Post> getPublishedPosts() {
+        return postMapper.selectPublishedPosts();
     }
 }

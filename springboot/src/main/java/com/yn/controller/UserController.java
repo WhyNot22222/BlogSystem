@@ -73,4 +73,10 @@ public class UserController {
     ) {
         return userService.updateEmail(userId, newEmail);
     }
+
+    // 获取用户名
+    @PostMapping("/getUser")
+    public Result getUser(@RequestParam Long userId) {
+        return userService.getUser(userId);
+    }
 }

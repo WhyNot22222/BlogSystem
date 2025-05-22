@@ -1,10 +1,16 @@
 package com.yn.controller;
 
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.yn.common.Result;
 import com.yn.entity.Post;
 import com.yn.service.PostService;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/posts")
@@ -57,5 +63,11 @@ public class PostController {
         } catch (Exception e) {
             return Result.error("500", "获取文章失败：" + e.getMessage());
         }
+    }
+
+    @GetMapping("/selectAll")
+    public Result getPublishedPosts() {
+        List<Post> posts = postService.getPublishedPosts();
+        return Result.success(posts);
     }
 }

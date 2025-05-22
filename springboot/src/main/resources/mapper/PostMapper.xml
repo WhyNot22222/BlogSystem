@@ -37,4 +37,10 @@
         DELETE FROM posts WHERE id = #{id}
     </delete>
 
+    <select id="selectPublishedPosts" resultType="com.yn.entity.Post">
+        SELECT * FROM posts
+        WHERE status = 'published'
+        ORDER BY created_at DESC
+    </select>
+
 </mapper>
