@@ -499,20 +499,6 @@ const beforeCoverUpload = (file) => {
   return true
 }
 
-// request.get('/file/getCover', {
-//   params: {
-//     userId: 1,
-//     postId: 8
-//   },
-//   responseType: 'json'
-// }).then(res => {
-//   if (res.code === '200') {
-//     console.log("请求封面成功")
-//   } else {
-//     ElMessage.error('封面加载失败：' + res.msg);
-//   }
-// })
-
 const uploadCover = async ({ file }) => {
   const formData = new FormData()
   formData.append('file', file)

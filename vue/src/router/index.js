@@ -46,6 +46,10 @@ const router = createRouter({
     {
       path: '/blog-editor',
       component: import('../views/BlogEditor.vue')
+    },
+    {
+      path: '/test',
+      component: import('../views/Test.vue')
     }
   ],
 })

@@ -7,4 +7,5 @@ public interface PostLikeMapper {
     int insert(PostLike postLike);
     int delete(Map<String, Object> params);
     int exists(Map<String, Object> params);
+    int countByPostId(Long postId);
 }

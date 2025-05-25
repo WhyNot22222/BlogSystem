@@ -34,4 +34,9 @@ public class PostLikeController {
             @RequestParam Long userId) {
         return Result.success(postLikeService.isLiked(postId, userId));
     }
+
+    @GetMapping("/count/{postId}")
+    public Result getLikeCount(@PathVariable Long postId) {
+        return Result.success(postLikeService.getLikeCount(postId));
+    }
 }

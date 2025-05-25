@@ -38,4 +38,8 @@ public class PostLikeService {
         params.put("userId", userId);
         return postLikeMapper.exists(params) > 0;
     }
+
+    public int getLikeCount(Long postId) {
+        return postLikeMapper.countByPostId(postId);
+    }
 }
