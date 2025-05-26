@@ -438,10 +438,12 @@ const savePassword = async () => {
     await securityFormRef.value.validate();
     securitySaving.value = true;
 
-    const response = await request.post('/user/updatePassword', {
-      userId: store.getters.userId,
-      currentPassword: securityForm.currentPassword,
-      newPassword: securityForm.newPassword
+    const response = await request.post('/user/updatePassword', null, {
+      params: {
+        userId: store.getters.userId,
+        currentPassword: securityForm.currentPassword,
+        newPassword: securityForm.newPassword
+      }
     });
 
     ElMessage.success(response.message || '密码修改成功');
@@ -489,9 +491,11 @@ const saveContact = async () => {
     await contactFormRef.value.validate();
     contactSaving.value = true;
 
-    const response = await request.post('/user/updateEmail', {
-      userId: store.getters.userId,
-      newEmail: contactForm.email
+    const response = await request.post('/user/updateEmail', null, {
+      params: {
+        userId: store.getters.userId,
+        newEmail: contactForm.email
+      }
     });
 
     ElMessage.success(response.message || '邮箱更新成功');

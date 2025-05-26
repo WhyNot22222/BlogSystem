@@ -9,11 +9,11 @@
           <el-tab-pane label="点赞最多" name="mostLiked"></el-tab-pane>
         </el-tabs>
       </div>
-      <div class="action-buttons">
-        <el-button type="primary" @click="showPostEditor = true">
-          <el-icon><Plus /></el-icon>发布帖子
-        </el-button>
-      </div>
+<!--      <div class="action-buttons">-->
+<!--        <el-button type="primary" @click="showPostEditor = true">-->
+<!--          <el-icon><Plus /></el-icon>发布帖子-->
+<!--        </el-button>-->
+<!--      </div>-->
     </div>
 
     <!-- 热门标签区 -->
@@ -47,6 +47,12 @@
       <div class="posts-container">
         <div v-if="loading" class="loading-container">
           <el-skeleton :rows="5" animated />
+        </div>
+        <!-- 新增：错误状态显示 -->
+        <div v-else-if="error" class="error-container">
+          <el-alert type="error" :closable="false">
+            {{ error }}
+          </el-alert>
         </div>
         <template v-else>
           <div v-for="post in filteredPosts" :key="post.id" class="post-card">
@@ -105,7 +111,7 @@
                 </el-icon>
                 <span>{{ post.comments.length }}</span>
               </div>
-              <div class="action-item" @click="toggleFavorite(post)">
+              <div class="action-item" @click="openFavoritesModal(post)">
                 <el-icon :class="{ 'active': post.isFavorited }">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
@@ -127,71 +133,71 @@
       </div>
     </div>
 
-    <!-- 发帖编辑器对话框 -->
-    <el-dialog
-        v-model="showPostEditor"
-        title="发布帖子"
-        width="70%"
-        destroy-on-close
-    >
-      <div class="post-editor">
-        <el-form :model="newPost" label-position="top">
-          <el-form-item label="标题">
-            <el-input v-model="newPost.title" placeholder="请输入标题（最多50字）" maxlength="50" show-word-limit></el-input>
-          </el-form-item>
+<!--    &lt;!&ndash; 发帖编辑器对话框 &ndash;&gt;-->
+<!--    <el-dialog-->
+<!--        v-model="showPostEditor"-->
+<!--        title="发布帖子"-->
+<!--        width="70%"-->
+<!--        destroy-on-close-->
+<!--    >-->
+<!--      <div class="post-editor">-->
+<!--        <el-form :model="newPost" label-position="top">-->
+<!--          <el-form-item label="标题">-->
+<!--            <el-input v-model="newPost.title" placeholder="请输入标题（最多50字）" maxlength="50" show-word-limit></el-input>-->
+<!--          </el-form-item>-->
 
-          <el-form-item label="内容">
-            <el-input
-                v-model="newPost.content"
-                type="textarea"
-                :rows="6"
-                placeholder="分享你的想法..."
-                resize="vertical"
-            ></el-input>
-          </el-form-item>
+<!--          <el-form-item label="内容">-->
+<!--            <el-input-->
+<!--                v-model="newPost.content"-->
+<!--                type="textarea"-->
+<!--                :rows="6"-->
+<!--                placeholder="分享你的想法..."-->
+<!--                resize="vertical"-->
+<!--            ></el-input>-->
+<!--          </el-form-item>-->
 
-          <el-form-item label="添加图片">
-            <el-upload
-                action="#"
-                list-type="picture-card"
-                :auto-upload="false"
-                :limit="4"
-                :on-change="handleImageChange"
-                :on-remove="handleImageRemove"
-            >
-              <el-icon><Plus /></el-icon>
-            </el-upload>
-          </el-form-item>
+<!--          <el-form-item label="添加图片">-->
+<!--            <el-upload-->
+<!--                action="#"-->
+<!--                list-type="picture-card"-->
+<!--                :auto-upload="false"-->
+<!--                :limit="4"-->
+<!--                :on-change="handleImageChange"-->
+<!--                :on-remove="handleImageRemove"-->
+<!--            >-->
+<!--              <el-icon><Plus /></el-icon>-->
+<!--            </el-upload>-->
+<!--          </el-form-item>-->
 
-          <el-form-item label="话题标签">
-            <el-select
-                v-model="newPost.tags"
-                multiple
-                filterable
-                allow-create
-                default-first-option
-                placeholder="选择或创建标签（最多3个）"
-                :max="3"
-            >
-              <el-option
-                  v-for="tag in availableTags"
-                  :key="tag"
-                  :label="tag"
-                  :value="tag"
-              ></el-option>
-            </el-select>
-          </el-form-item>
-        </el-form>
-      </div>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="showPostEditor = false">取消</el-button>
-          <el-button type="primary" @click="submitPost" :loading="submitting">
-            发布
-          </el-button>
-        </span>
-      </template>
-    </el-dialog>
+<!--          <el-form-item label="话题标签">-->
+<!--            <el-select-->
+<!--                v-model="newPost.tags"-->
+<!--                multiple-->
+<!--                filterable-->
+<!--                allow-create-->
+<!--                default-first-option-->
+<!--                placeholder="选择或创建标签（最多3个）"-->
+<!--                :max="3"-->
+<!--            >-->
+<!--              <el-option-->
+<!--                  v-for="tag in availableTags"-->
+<!--                  :key="tag"-->
+<!--                  :label="tag"-->
+<!--                  :value="tag"-->
+<!--              ></el-option>-->
+<!--            </el-select>-->
+<!--          </el-form-item>-->
+<!--        </el-form>-->
+<!--      </div>-->
+<!--      <template #footer>-->
+<!--        <span class="dialog-footer">-->
+<!--          <el-button @click="showPostEditor = false">取消</el-button>-->
+<!--          <el-button type="primary" @click="submitPost" :loading="submitting">-->
+<!--            发布-->
+<!--          </el-button>-->
+<!--        </span>-->
+<!--      </template>-->
+<!--    </el-dialog>-->
 
     <!-- 帖子详情对话框 -->
     <el-dialog
@@ -220,7 +226,7 @@
                   </svg>
                 </el-icon> {{ currentPost.likes }}
               </el-button>
-              <el-button :type="currentPost.isFavorited ? 'primary' : 'default'" @click="toggleFavorite(currentPost)">
+              <el-button :type="currentPost.isFavorited ? 'primary' : 'default'" @click="openFavoritesModal(currentPost)">
                 <el-icon>
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
@@ -332,20 +338,165 @@
         </div>
       </template>
     </el-dialog>
+
+    <!-- 收藏夹选择模态框 -->
+    <el-dialog
+        v-model="showFavoritesModal"
+        title="添加收藏夹"
+        width="480px"
+        :show-close="true"
+        :close-on-click-modal="false"
+        :close-on-press-escape="true"
+        class="favorites-modal"
+    >
+      <div class="favorites-content">
+        <!-- 创建收藏夹选项 -->
+        <div class="create-folder-item" @click="showCreateFolderDialog">
+          <div class="folder-info">
+            <el-icon class="create-icon">
+              <Plus />
+            </el-icon>
+            <span class="folder-name">创建收藏夹</span>
+          </div>
+        </div>
+
+        <!-- 收藏夹列表 -->
+        <div class="favorites-list">
+          <div
+              v-for="folder in favoriteFolders"
+              :key="folder.id"
+              class="folder-item"
+              :class="{ 'recently-used': folder.isRecentlyUsed }"
+          >
+            <div class="folder-info">
+              <div class="folder-main">
+                <div class="folder-name">{{ folder.name }}</div>
+                <div class="folder-meta">
+                  <span class="item-count">{{ folder.itemCount }}条内容</span>
+                  <span class="separator">·</span>
+                  <span class="privacy-status">{{ folder.isPrivate ? '私密' : '公开' }}</span>
+                  <el-tag
+                      v-if="folder.isRecentlyUsed"
+                      type="warning"
+                      size="small"
+                      effect="plain"
+                      class="recent-tag"
+                  >
+                    最近使用
+                  </el-tag>
+                </div>
+              </div>
+            </div>
+            <el-button
+                type="primary"
+                size="small"
+                plain
+                @click="addToFolder(folder)"
+                :loading="folder.loading"
+            >
+              收藏
+            </el-button>
+          </div>
+        </div>
+      </div>
+    </el-dialog>
+
+    <!-- 创建收藏夹对话框 -->
+    <el-dialog
+        v-model="showCreateDialog"
+        title="创建收藏夹"
+        width="400px"
+        :show-close="true"
+        :close-on-click-modal="false"
+    >
+      <el-form :model="newFolder" label-position="top">
+        <el-form-item label="收藏夹名称" required>
+          <el-input
+              v-model="newFolder.name"
+              placeholder="请输入收藏夹名称"
+              maxlength="20"
+              show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="隐私设置">
+          <el-radio-group v-model="newFolder.isPrivate">
+            <el-radio :label="false">公开 - 所有人可见</el-radio>
+            <el-radio :label="true">私密 - 仅自己可见</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="描述（可选）">
+          <el-input
+              v-model="newFolder.description"
+              type="textarea"
+              :rows="3"
+              placeholder="为这个收藏夹添加描述..."
+              maxlength="100"
+              show-word-limit
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showCreateDialog = false">取消</el-button>
+          <el-button
+              type="primary"
+              @click="createFolder"
+              :loading="createLoading"
+              :disabled="!newFolder.name.trim()"
+          >
+            创建
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { Plus } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
+import request from '@/utils/request';
+import { useStore } from "vuex";
 
-// 模拟数据
+const store = useStore();
+const userId = computed(() => store.getters.userId)
+
+// 当前用户信息
 const currentUser = reactive({
-  id: 1,
-  name: '当前用户',
-  avatar: '/placeholder.svg?height=40&width=40'
+  id: userId.value,
+  name: '',
+  avatar: ''
 });
+
+// 获取当前用户详细信息 (name, avatar)
+const fetchCurrentUserDetails = async () => {
+  if (!currentUser.id) {
+    currentUser.name = '访客';
+    currentUser.avatar = '/placeholder.svg?height=40&width=40';
+    return;
+  }
+  try {
+    // 获取用户名
+    const userRes = await request.post(`/user/getUser`, null, {
+      params: { userId: currentUser.id }
+    });
+    if (userRes.code === '200' && userRes.data) {
+      currentUser.name = userRes.data.username || '未知用户';
+    } else {
+      ElMessage.error('获取当前用户信息失败');
+    }
+
+    // 获取头像
+    const avatarUrl = await fetchUserAvatar(currentUser.id);
+    currentUser.avatar = avatarUrl || '/placeholder.svg?height=40&width=40';
+
+  } catch (error) {
+    console.error(`获取当前用户(id: ${currentUser.id})信息失败:`, error);
+    currentUser.name = '信息加载失败';
+    currentUser.avatar = '/placeholder.svg?height=40&width=40'; // 出错时显示默认头像
+  }
+};
 
 // 状态变量
 const loading = ref(false);
@@ -361,6 +512,10 @@ const newComment = ref('');
 const selectedTag = ref('');
 const hasMorePosts = ref(true);
 const page = ref(1);
+const error = ref(null);
+const showFavoritesModal = ref(false)
+const showCreateDialog = ref(false)
+const createLoading = ref(false)
 
 // 新帖子表单
 const newPost = reactive({
@@ -387,149 +542,7 @@ const availableTags = ref([
 ]);
 
 // 模拟数据 - 帖子列表
-const posts = ref([
-  {
-    id: 1,
-    title: '如何高效学习前端技术？',
-    content: '作为一名前端开发者，我发现学习新技术的速度非常重要。以下是我的一些经验分享...\n\n1. 建立知识体系\n2. 多动手实践\n3. 参与开源项目\n4. 阅读优质博客\n5. 定期复习巩固',
-    author: {
-      id: 2,
-      name: '技术达人',
-      avatar: '/placeholder.svg?height=40&width=40'
-    },
-    createdAt: new Date(Date.now() - 3600000 * 2),
-    images: [
-      { url: '/placeholder.svg?height=300&width=400' },
-      { url: '/placeholder.svg?height=300&width=400' }
-    ],
-    tags: ['前端', '学习方法', '经验分享'],
-    likes: 128,
-    isLiked: false,
-    favorites: 56,
-    isFavorited: false,
-    comments: [
-      {
-        id: 101,
-        content: '非常实用的建议，特别是参与开源项目这点我很认同！',
-        author: {
-          id: 3,
-          name: '开源爱好者',
-          avatar: '/placeholder.svg?height=32&width=32'
-        },
-        createdAt: new Date(Date.now() - 3600000),
-        likes: 24,
-        isLiked: false
-      },
-      {
-        id: 102,
-        content: '我觉得定期复习很重要，不然学了就忘。',
-        author: {
-          id: 4,
-          name: '学习者',
-          avatar: '/placeholder.svg?height=32&width=32'
-        },
-        createdAt: new Date(Date.now() - 2700000),
-        likes: 16,
-        isLiked: false
-      }
-    ]
-  },
-  {
-    id: 2,
-    title: '分享一个实用的Vue 3组件库',
-    content: '最近在项目中使用了一个非常不错的Vue 3组件库，界面美观、功能强大，推荐给大家！这个库的特点是：完全支持Vue 3和TypeScript，提供丰富的组件和主题定制，文档详尽，示例丰富，性能优秀，包体积小。',
-    author: {
-      id: 5,
-      name: 'Vue爱好者',
-      avatar: '/placeholder.svg?height=40&width=40'
-    },
-    createdAt: new Date(Date.now() - 3600000 * 5),
-    images: [],
-    tags: ['Vue', '组件库', '资源分享'],
-    likes: 95,
-    isLiked: true,
-    favorites: 42,
-    isFavorited: true,
-    comments: [
-      {
-        id: 103,
-        content: '感谢分享！正好我最近在找Vue 3的组件库。',
-        author: {
-          id: 6,
-          name: '前端新手',
-          avatar: '/placeholder.svg?height=32&width=32'
-        },
-        createdAt: new Date(Date.now() - 3000000),
-        likes: 12,
-        isLiked: false
-      }
-    ]
-  },
-  {
-    id: 3,
-    title: '请教一个关于React Hooks的问题',
-    content: '我在使用useEffect时遇到了一个问题：当依赖数组包含对象或数组时，即使内容没变，组件也会重新渲染。有没有好的解决方案？',
-    author: {
-      id: 7,
-      name: 'React学习者',
-      avatar: '/placeholder.svg?height=40&width=40'
-    },
-    createdAt: new Date(Date.now() - 3600000 * 8),
-    images: [],
-    tags: ['React', 'Hooks', '问题求助'],
-    likes: 42,
-    isLiked: false,
-    favorites: 18,
-    isFavorited: false,
-    comments: [
-      {
-        id: 104,
-        content: '你可以使用useMemo来记忆对象或数组，或者使用useRef来存储它们。',
-        author: {
-          id: 8,
-          name: 'React专家',
-          avatar: '/placeholder.svg?height=32&width=32'
-        },
-        createdAt: new Date(Date.now() - 7200000),
-        likes: 36,
-        isLiked: true
-      }
-    ]
-  },
-  {
-    id: 4,
-    title: '我的前端学习路线图分享',
-    content: '前端学习路线图\n\n基础阶段\n- HTML/CSS基础\n- JavaScript基础\n- 浏览器工作原理\n\n进阶阶段\n- 现代JavaScript (ES6+)\n- 框架学习 (React/Vue/Angular)\n- 状态管理\n\n高级阶段\n- 性能优化\n- 安全性\n- 服务端渲染\n- TypeScript\n\n希望对大家有所帮助！',
-    author: {
-      id: 9,
-      name: '前端导师',
-      avatar: '/placeholder.svg?height=40&width=40'
-    },
-    createdAt: new Date(Date.now() - 3600000 * 24),
-    images: [
-      { url: '/placeholder.svg?height=300&width=600' }
-    ],
-    tags: ['前端', '学习路线', '经验分享'],
-    likes: 215,
-    isLiked: false,
-    favorites: 143,
-    isFavorited: false,
-    comments: [
-      {
-        id: 105,
-        content: '非常全面的学习路线，建议加上一些工程化的内容，比如Webpack、Vite等构建工具。',
-        author: {
-          id: 10,
-          name: '工程化专家',
-          avatar: '/placeholder.svg?height=32&width=32'
-        },
-        createdAt: new Date(Date.now() - 18000000),
-        likes: 28,
-        isLiked: false
-      }
-    ]
-  }
-]);
+const posts = ref([]);
 
 // 计算属性 - 根据筛选条件过滤帖子
 const filteredPosts = computed(() => {
@@ -554,19 +567,22 @@ const filteredPosts = computed(() => {
 
 // 生命周期钩子
 onMounted(() => {
-  loadPosts();
+  if (currentUser.id) {
+    fetchCurrentUserDetails();
+  }
+  fetchAndProcessPosts();
 });
 
-// 方法 - 加载帖子
-const loadPosts = () => {
-  loading.value = true;
-
-  // 模拟API请求延迟
-  setTimeout(() => {
-    // 这里实际项目中会从API获取数据
-    loading.value = false;
-  }, 1000);
-};
+// 新增：监听 userId 的变化，以更新 currentUser 信息
+watch(userId, async (newUserId, oldUserId) => {
+  currentUser.id = newUserId;
+  if (newUserId) {
+    await fetchCurrentUserDetails();
+  } else {
+    currentUser.name = '访客';
+    currentUser.avatar = '/placeholder.svg?height=40&width=40';
+  }
+}, { immediate: false });
 
 // 方法 - 加载更多帖子
 const loadMorePosts = () => {
@@ -583,73 +599,102 @@ const loadMorePosts = () => {
   }, 1000);
 };
 
-// 方法 - 处理图片上传
-const handleImageChange = (file) => {
-  // 实际项目中会上传图片到服务器
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    newPost.images.push({
-      url: e.target.result,
-      name: file.name
-    });
-  };
-  reader.readAsDataURL(file.raw);
-};
+// // 方法 - 处理图片上传
+// const handleImageChange = (file) => {
+//   // 实际项目中会上传图片到服务器
+//   const reader = new FileReader();
+//   reader.onload = (e) => {
+//     newPost.images.push({
+//       url: e.target.result,
+//       name: file.name
+//     });
+//   };
+//   reader.readAsDataURL(file.raw);
+// };
+//
+// // 方法 - 处理图片移除
+// const handleImageRemove = (file) => {
+//   const index = newPost.images.findIndex(img => img.name === file.name);
+//   if (index !== -1) {
+//     newPost.images.splice(index, 1);
+//   }
+// };
 
-// 方法 - 处理图片移除
-const handleImageRemove = (file) => {
-  const index = newPost.images.findIndex(img => img.name === file.name);
-  if (index !== -1) {
-    newPost.images.splice(index, 1);
-  }
-};
-
-// 方法 - 提交帖子
-const submitPost = () => {
-  if (!newPost.title.trim()) {
-    ElMessage.warning('请输入标题');
-    return;
-  }
-
-  if (!newPost.content.trim()) {
-    ElMessage.warning('请输入内容');
-    return;
-  }
-
-  submitting.value = true;
-
-  // 模拟API请求延迟
-  setTimeout(() => {
-    // 模拟添加新帖子
-    const newPostObj = {
-      id: Date.now(),
-      title: newPost.title,
-      content: newPost.content,
-      author: currentUser,
-      createdAt: new Date(),
-      images: [...newPost.images],
-      tags: [...newPost.tags],
-      likes: 0,
-      isLiked: false,
-      favorites: 0,
-      isFavorited: false,
-      comments: []
-    };
-
-    posts.value.unshift(newPostObj);
-
-    // 重置表单
-    newPost.title = '';
-    newPost.content = '';
-    newPost.images = [];
-    newPost.tags = [];
-
-    showPostEditor.value = false;
-    submitting.value = false;
-
-    ElMessage.success('发布成功');
-  }, 1000);
-};
+// // 方法 - 提交帖子
+// const submitPost = () => {
+//   if (!newPost.title.trim()) {
+//     ElMessage.warning('请输入标题');
+//     return;
+//   }
+//
+//   if (!newPost.content.trim()) {
+//     ElMessage.warning('请输入内容');
+//     return;
+//   }
+//
+//   submitting.value = true;
+//
+//   // 模拟API请求延迟
+//   setTimeout(() => {
+//     // 模拟添加新帖子
+//     const newPostObj = {
+//       id: Date.now(), // 通常由后端生成
+//       title: newPost.title,
+//       content: newPost.content,
+//       // author: currentUser, // 移除，假设后端处理
+//       createdAt: new Date(), // 通常由后端生成
+//       images: [...newPost.images].map(img => ({ url: img.url })), // 确保只传递需要的数据
+//       tags: [...newPost.tags],
+//       likes: 0,
+//       isLiked: false,
+//       favorites: 0,
+//       isFavorited: false,
+//       comments: []
+//     };
+//
+//     // 假设的后端API调用
+//     // request.post('/community/posts/create', newPostObj)
+//     //   .then(response => {
+//     //     if (response.code === '200') {
+//     //       posts.value.unshift(response.data); // 将后端返回的完整帖子对象添加到列表
+//     //       ElMessage.success('发布成功');
+//     //     } else {
+//     //       ElMessage.error(response.msg || '发布失败');
+//     //     }
+//     //   })
+//     //   .catch(err => {
+//     //     ElMessage.error('发布失败，请检查网络连接');
+//     //     console.error('发布帖子失败:', err);
+//     //   })
+//     //   .finally(() => {
+//     //     submitting.value = false;
+//     //     showPostEditor.value = false;
+//     //     // 重置表单
+//     //     newPost.title = '';
+//     //     newPost.content = '';
+//     //     newPost.images = [];
+//     //     newPost.tags = [];
+//     //   });
+//
+//     //  暂时保留前端模拟，但移除了 author 和调整了 images 结构
+//     posts.value.unshift({
+//         ...newPostObj,
+//         author: currentUser, // 为了演示，暂时还用currentUser，实际应由后端数据填充或在fetchAndProcessPosts中获取
+//         id: Date.now() + Math.random(), // 确保唯一性
+//     });
+//
+//     // 重置表单
+//     newPost.title = '';
+//     newPost.content = '';
+//     newPost.images = [];
+//     newPost.tags = [];
+//
+//     showPostEditor.value = false;
+//     submitting.value = false;
+//
+//     ElMessage.success('发布成功');
+//   }, 1000);
+// };
 
 // 方法 - 查看帖子详情
 const viewPostDetail = (post) => {
@@ -668,19 +713,46 @@ const openComments = (post) => {
 };
 
 // 方法 - 点赞帖子
-const toggleLike = (post) => {
+const toggleLike = async (post) => {
+  const originalIsLiked = post.isLiked;
+  const originalLikes = post.likes;
+
   post.isLiked = !post.isLiked;
   post.likes += post.isLiked ? 1 : -1;
 
-  // 实际项目中会发送API请求
-};
+  try {
+    // 根据状态选择请求方法
+    const response = originalIsLiked
+      ? await request.delete('/likes', {
+          params: {
+            userId: currentUser.id,
+            postId: post.id
+          }
+        })
+      : await request.post('/likes', null, {
+          params: {
+            userId: currentUser.id,
+            postId: post.id
+          }
+        });
 
-// 方法 - 收藏帖子
-const toggleFavorite = (post) => {
-  post.isFavorited = !post.isFavorited;
-  post.favorites += post.isFavorited ? 1 : -1;
-
-  // 实际项目中会发送API请求
+    if (response.code === '200') {
+      if (originalIsLiked) {
+        ElMessage.success('取消点赞成功');
+      } else {
+        ElMessage.success('点赞成功');
+      }
+    } else {
+      post.isLiked = originalIsLiked;
+      post.likes = originalLikes;
+      ElMessage.error(response.msg || '操作失败');
+    }
+  } catch (error) {
+    post.isLiked = originalIsLiked;
+    post.likes = originalLikes;
+    ElMessage.error('请求失败，请检查网络');
+    console.error('API请求异常:', error);
+  }
 };
 
 // 方法 - 提交评论
@@ -784,6 +856,332 @@ const formatTime = (dateInput) => {
 
   return `${year}-${month}-${day}`;
 };
+
+// 从后端获取头像
+const fetchUserAvatar = async (userId) => {
+  if (!userId) return ''; // 如果 userId 不存在，则返回空字符串
+  try {
+    const res = await request.get('/file/getAvatar', {
+      params: { userId },
+      responseType: 'json' // 假设后端返回json，其中data字段是base64编码的图片
+    });
+    if (res.code === '200' && res.data) {
+      const binaryString = window.atob(res.data);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: 'image/jpeg' }); // 假设是jpeg，根据实际情况调整
+      return URL.createObjectURL(blob);
+    } else {
+      ElMessage.error('头像加载失败');
+      return '/placeholder.svg?height=40&width=40'; // 返回默认头像
+    }
+  } catch (error) {
+    console.error(`头像加载失败 for userId ${userId}:`, error);
+    return '/placeholder.svg?height=40&width=40'; // 返回默认头像
+  }
+};
+
+// 从后端获取和处理帖子数据
+const fetchAndProcessPosts = async () => {
+  loading.value = true;
+  error.value = null;
+  try {
+    const res = await request.get('/posts/selectAll');
+    if (res.code === '200' && Array.isArray(res.data)) {
+      console.log('从后端获取的帖子数据:', res.data); // 调试输出
+      posts.value = await Promise.all(
+        res.data.map(async (postData) => {
+          let authorName = '未知用户';
+          let authorAvatar = '/placeholder.svg?height=40&width=40';
+
+          if (postData.userId) {
+            try {
+              const userRes = await request.post(`/user/getUser?userId=${postData.userId}`);
+              if (userRes.code === '200' && userRes.data) {
+                authorName = userRes.data.username || '未知用户';
+              }
+              authorAvatar = await fetchUserAvatar(postData.userId);
+
+              const likeRes = await request.get(`/likes/count/${postData.id}`)
+              if (likeRes.code === '200') {
+                postData.likes = likeRes.data;
+              }
+
+              const isLikedRes = await request.get(`/likes/check`, {
+                params: {
+                  postId: postData.id,
+                  userId: postData.userId,
+                }
+              })
+              if (isLikedRes.code === '200') {
+                postData.isLiked = isLikedRes.data;
+              }
+
+              const isFavoritedRes = await request.get('/favorites/check', {
+                params: {
+                  postId: postData.id,
+                  userId: userId.value // 当前登录用户ID
+                }
+              });
+              if (isFavoritedRes.code === '200') {
+                postData.isFavorited = isFavoritedRes.data;
+              }
+
+              const favoritesRes = await request.get(`/favorites/count`, {
+                params: {
+                  postId: postData.id,
+                }
+              });
+              if (favoritesRes.code === '200') {
+                postData.favorites = favoritesRes.data;
+              }
+            } catch (userError) {
+              console.error(`获取用户 ${postData.userId} 信息失败:`, userError);
+            }
+          }
+
+          // 确保 images 和 comments 字段存在且为数组
+          const images = Array.isArray(postData.images) ? postData.images : [];
+          const comments = Array.isArray(postData.comments) ? postData.comments.map(comment => ({
+            ...comment,
+            author: comment.author || { name: '未知用户', avatar: '/placeholder.svg?height=32&width=32' }, // 确保评论作者信息存在
+            createdAt: comment.createdAt || new Date().toISOString(), // 确保评论时间存在
+            likes: comment.data || 0,
+            isLiked: comment.isLiked || false,
+          })) : [];
+          const tags = Array.isArray(postData.tags) ? postData.tags : [];
+
+
+          return {
+            id: postData.id,
+            title: postData.title,
+            content: postData.content,
+            author: {
+              id: postData.userId,
+              name: authorName,
+              avatar: authorAvatar,
+            },
+            createdAt: postData.createdAt || new Date().toISOString(), // 后端应提供标准日期字符串
+            images: images, // 假设后端直接返回 {url: '...'} 格式的数组
+            tags: tags, // 假设后端直接返回字符串数组
+            likes: postData.likes || 0,
+            isLiked: postData.isLiked || false,
+            favorites: postData.favorites || 0,
+            isFavorited: postData.isFavorited || false,
+            comments: comments, // 假设后端直接返回评论数组
+          };
+        })
+      );
+      console.log('处理后的帖子数据:', posts.value); // 调试输出
+      // 如果后端支持分页，这里可能需要更新 hasMorePosts 和 page
+      // 暂时假设一次性加载所有帖子
+      hasMorePosts.value = false;
+    } else if (res.code !== '200') {
+      throw new Error(res.msg || '获取帖子失败');
+    } else {
+      posts.value = []; // 如果 res.data 不是数组，则设置为空
+      hasMorePosts.value = false;
+    }
+  } catch (err) {
+    console.error('获取社区帖子失败:', err);
+    error.value = `无法加载帖子：${err.message || '请稍后重试'}`;
+    posts.value = []; // 出错时清空帖子
+    hasMorePosts.value = false;
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 收藏夹数据
+const favoriteFolders = ref([])
+
+// 新建收藏夹表单
+const newFolder = reactive({
+  name: '',
+  isPrivate: false,
+  description: ''
+})
+
+// 获取收藏夹列表
+const fetchFavoriteFolders = async () => {
+  try {
+    const res = await request.get('/favorites/collections/list', {
+      params: { userId: userId.value }
+    })
+    
+    if (res.code === '200') {
+      // 获取基础收藏夹列表
+      const baseFolders = res.data;
+      console.log('获取到的收藏夹列表:', baseFolders);
+      
+      // 并行请求每个收藏夹的帖子数量
+      const foldersWithCount = await Promise.all(
+        baseFolders.map(async item => {
+          try {
+            const countRes = await request.get(`/favorites/collection/count`, {
+              params: {
+                collectionId: item.id,
+              }
+            });
+            const collectionRes = await request.get('/favorites/collections', {
+              params: {
+                collectionId: item.id
+              }
+            })
+            console.log("collectionRes:", collectionRes)
+            return {
+              ...item,
+              itemCount: countRes.data || 0,
+              isPrivate: !collectionRes.data.public,
+              lastUsedTime: collectionRes.data.updatedAt || 0
+            };
+          } catch (e) {
+            console.error(`获取收藏夹${item.id}数量失败:`, e);
+            return {
+              ...item,
+              itemCount: 0
+            };
+          }
+        })
+      );
+
+      favoriteFolders.value = foldersWithCount.map(item => ({
+        id: item.id,
+        name: item.name,
+        itemCount: item.itemCount,
+        isPrivate: item.isPrivate,
+        isRecentlyUsed: item.lastUsedTime > Date.now() - 7 * 86400000
+      }));
+
+      console.log('处理后的收藏夹列表:', favoriteFolders.value);
+    }
+  } catch (error) {
+    ElMessage.error('获取收藏夹列表失败');
+    console.error('API请求失败:', error);
+  }
+};
+
+// 打开收藏夹模态框
+const openFavoritesModal = async (post) => {
+  currentPost.value = post;
+  
+  // 先检查收藏状态
+  if (currentPost.value.isFavorited) {
+    try {
+      await ElMessageBox.confirm(
+        '确定要取消收藏吗？',
+        '提示', 
+        { type: 'warning' }
+      );
+      
+      // 执行取消收藏逻辑
+      const res = await request.delete('/favorites/remove', {
+        params: {
+          postId: currentPost.value.id,
+          userId: userId.value
+        }
+      });
+
+      if (res.code === '200') {
+        currentPost.value.favorites--;
+        currentPost.value.isFavorited = false;
+        ElMessage.success('已取消收藏');
+      }
+    } catch (error) {
+      if (error !== 'cancel') {
+        ElMessage.error('取消收藏失败：' + error.message);
+      }
+    }
+    return;
+  }
+
+  // 未收藏时加载收藏夹
+  try {
+    await fetchFavoriteFolders();
+    showFavoritesModal.value = true;
+  } catch (error) {
+    ElMessage.error('无法加载收藏夹：' + error.message);
+  }
+}
+
+// 显示创建收藏夹对话框
+const showCreateFolderDialog = () => {
+  showCreateDialog.value = true
+}
+
+// 添加到收藏夹
+const addToFolder = async (folder) => {
+  if (!currentPost.value) return
+
+  // 原来没收藏，再次点击则收藏
+  folder.loading = true
+  try {
+    const res = await request.post('/favorites/add', {
+      collectionId: folder.id,
+      postId: currentPost.value.id,
+      userId: userId.value,
+      createdAt: new Date().toISOString()
+    });
+
+    if (res.code === '200') {
+      // 更新本地数据
+      folder.itemCount++
+      currentPost.value.favorites++
+      currentPost.value.isFavorited = true
+
+      ElMessage.success(`已收藏到"${folder.name}"`);
+      showFavoritesModal.value = false;
+    } else {
+      ElMessage.error('收藏失败：' + res.msg);
+    }
+  } catch (error) {
+    ElMessage.error('请求异常：' + error.message);
+  } finally {
+    folder.loading = false;
+  }
+}
+
+// 创建收藏夹
+const createFolder = async () => {
+  if (!newFolder.name.trim()) {
+    ElMessage.warning('请输入收藏夹名称')
+    return
+  }
+
+  createLoading.value = true
+
+  try {
+    // 模拟API请求
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    // 添加新收藏夹
+    const newFolderData = {
+      id: Date.now(),
+      name: newFolder.name,
+      itemCount: 0,
+      isPrivate: newFolder.isPrivate,
+      isRecentlyUsed: false,
+      loading: false
+    }
+
+    favoriteFolders.value.unshift(newFolderData)
+
+    // 重置表单
+    newFolder.name = ''
+    newFolder.isPrivate = false
+    newFolder.description = ''
+
+    showCreateDialog.value = false
+    ElMessage.success('收藏夹创建成功')
+
+  } catch (error) {
+    ElMessage.error('创建失败，请重试')
+  } finally {
+    createLoading.value = false
+  }
+}
 </script>
 
 <style scoped>
@@ -939,6 +1337,116 @@ const formatTime = (dateInput) => {
 
 .action-item:hover {
   color: #e83929;
+}
+
+.action-item .el-icon {
+  margin-right: 4px;
+  font-size: 16px;
+}
+
+.action-item .active {
+  color: #f56c6c;
+}
+
+/* 收藏夹模态框样式 */
+.favorites-modal :deep(.el-dialog__header) {
+  padding: 20px 20px 0 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.favorites-modal :deep(.el-dialog__body) {
+  padding: 0;
+}
+
+.favorites-content {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.create-folder-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.create-folder-item:hover {
+  background-color: #f8f9fa;
+}
+
+.create-folder-item .folder-info {
+  display: flex;
+  align-items: center;
+}
+
+.create-icon {
+  color: #f56c6c;
+  font-size: 18px;
+  margin-right: 12px;
+}
+
+.folder-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #f56c6c;
+}
+
+.favorites-list {
+  padding: 0;
+}
+
+.folder-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+}
+
+.folder-item:hover {
+  background-color: #f8f9fa;
+}
+
+.folder-item.recently-used {
+  background-color: #fff7e6;
+}
+
+.folder-info {
+  flex: 1;
+}
+
+.folder-main .folder-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.folder-meta {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #999;
+}
+
+.separator {
+  margin: 0 6px;
+}
+
+.recent-tag {
+  margin-left: 8px;
+}
+
+.item-count {
+  color: #666;
+}
+
+.privacy-status {
+  color: #999;
 }
 
 .empty-state {
@@ -1099,6 +1607,28 @@ const formatTime = (dateInput) => {
 
   .post-image {
     width: 100%;
+  }
+}
+
+/* 创建收藏夹对话框样式 */
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .favorites-modal {
+    width: 90% !important;
+  }
+
+  .folder-item {
+    padding: 12px 16px;
+  }
+
+  .create-folder-item {
+    padding: 12px 16px;
   }
 }
 </style>

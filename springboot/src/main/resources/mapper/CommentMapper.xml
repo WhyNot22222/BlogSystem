@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yn.mapper.CommentMapper">
+
+    <insert id="insertComment" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO comments(post_id, parent_id, user_id, content, status)
+        VALUES(#{postId}, #{parentId}, #{userId}, #{content}, #{status})
+    </insert>
+
+    <select id="selectByPostId" resultType="com.yn.entity.Comment">
+        SELECT * FROM comments 
+        WHERE post_id = #{postId} AND status = 'approved'
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findById" resultType="com.yn.entity.Comment">
+        SELECT * FROM comments 
+        WHERE id = #{id}
+    </select>
+
+    <update id="updateStatus">
+        UPDATE comments SET status = #{status} 
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM comments WHERE id = #{id}
+    </delete>
+
+    <select id="existsChildComments" resultType="boolean">
+        SELECT COUNT(*) > 0 
+        FROM comments 
+        WHERE parent_id = #{parentId}
+    </select>
+
+    <select id="findCommentTreeIds" resultType="java.lang.Long">
+        WITH RECURSIVE comment_tree AS (
+            SELECT id, parent_id
+            FROM comments
+            WHERE id = #{id}
+            UNION ALL
+            SELECT c.id, c.parent_id
+            FROM comments c
+            INNER JOIN comment_tree ct ON ct.id = c.parent_id
+        )
+        SELECT id FROM comment_tree
+    </select>
+
+</mapper>

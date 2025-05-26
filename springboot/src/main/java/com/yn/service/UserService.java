@@ -3,6 +3,7 @@ package com.yn.service;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.yn.common.Result;
+import com.yn.entity.FavoritesCollection;
 import com.yn.entity.User;
 import com.yn.mapper.UserMapper;
 import jakarta.annotation.Resource;
@@ -27,6 +28,9 @@ public class UserService {
         return PageInfo.of(userList);
     }
 
+    @Resource
+    private FavoritesService favoritesService;
+
     public Result register(User user) {
         try {
             if (userMapper.findByUsername(user.getUsername()) != null) {
@@ -36,6 +40,13 @@ public class UserService {
                 return Result.error("邮箱已被注册");
             }
             userMapper.insertUser(user);
+            
+            // 创建默认收藏夹
+            FavoritesCollection defaultCollection = new FavoritesCollection();
+            defaultCollection.setUserId(user.getId());
+            defaultCollection.setName("默认收藏夹");
+            favoritesService.createCollection(defaultCollection);
+
             return Result.success("注册成功");
         } catch (DataIntegrityViolationException e) {
             // 处理数据库唯一约束异常
@@ -112,10 +123,11 @@ public class UserService {
         return Result.success("邮箱更新成功");
     }
 
-    // 获取用户信息
-    public Result getUser(Long userId) {
+    // 根据用户ID查询用户信息
+    public Result findById(Long userId) {
+        System.out.println("查询用户：" + userId);
         User user = userMapper.findById(userId);
-        if (user != null) {
+        if (user!= null) {
             return Result.success(user);
         } else {
             return Result.error("用户不存在");

@@ -74,9 +74,9 @@ public class UserController {
         return userService.updateEmail(userId, newEmail);
     }
 
-    // 获取用户名
+    // 根据id查询用户信息
     @PostMapping("/getUser")
-    public Result getUser(@RequestParam Long userId) {
-        return userService.getUser(userId);
+    public Result getUserById(@RequestParam Long userId) {
+        return userService.findById(userId);
     }
 }
