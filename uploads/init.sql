@@ -52,6 +52,8 @@ CREATE TABLE IF NOT EXISTS posts (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '文章ID',
     title VARCHAR(255) NOT NULL COMMENT '标题',
     content TEXT NOT NULL COMMENT '内容',
+    formatted_content TEXT NOT NULL COMMENT '格式化内容',
+    views INT DEFAULT 0 COMMENT '阅读量',
     summary TEXT COMMENT '摘要',
     cover_url VARCHAR(255) COMMENT '封面图片URL',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -67,10 +69,30 @@ CREATE TABLE IF NOT EXISTS posts (
     FOREIGN KEY (category_id) REFERENCES categories(id)
 );
 
-INSERT INTO posts (title, content, summary, status, user_id, category_id, created_at, published_at) VALUES
+INSERT INTO posts (title, content, formatted_content, views, summary, status, user_id, category_id, created_at, published_at) VALUES
     (
     'PyTorch入门与核心概念详解：从基础到实战问题解决',
     '用户/forch 编写 Transformer 模型时遇到了多个错误，包括维度不匹配、NaN 损失、注意力权重未记录等问题...\n- 阅读 760\n- 38 赞\n- 收藏 33',
+    '<h2>什么是设计模式</h2>
+    <p>设计模式是在软件设计中常见问题的典型解决方案。它们就像能根据需求进行调整的预制蓝图，可用于解决代码中反复出现的设计问题。</p>
+
+    <h2>设计模式的分类</h2>
+    <p>设计模式通常分为三大类：</p>
+    <ul>
+      <li><strong>创建型模式</strong>：提供创建对象的机制，增加已有代码的灵活性和可复用性</li>
+      <li><strong>结构型模式</strong>：介绍如何将对象和类组装成较大的结构，并同时保持结构的灵活和高效</li>
+      <li><strong>行为型模式</strong>：负责对象间的高效沟通和职责委派</li>
+    </ul>
+
+    <h2>常用的创建型模式</h2>
+    <h3>1. 单例模式 (Singleton)</h3>
+    <p>单例模式确保一个类只有一个实例，并提供一个全局访问点。</p>
+
+    <h3>2. 工厂方法模式 (Factory Method)</h3>
+    <p>工厂方法模式提供了一种创建对象的接口，但由子类决定要实例化哪个类。</p>
+
+    <p>本文将继续深入探讨其他设计模式的实现和应用场景...</p>',
+     0,
     '用户/forch 编写 Transformer 模型时遇到了多个错误，包括维度不匹配、NaN 损失、注意力权重未记录等问题...',
     'published',
     1,
@@ -81,6 +103,8 @@ INSERT INTO posts (title, content, summary, status, user_id, category_id, create
     (
     '408考研经典详解：2009年第10题',
     '所以，如果用二路归并排序算法，第二趟排序之后所得到的序列中，前4个关键字应该是有序的，但是...\n- 阅读 448\n- 9 赞\n- 收藏 5',
+    '所以，如果用二路归并排序算法，第二趟排序之后所得到的序列中，前4个关键字应该是有序的，但是...\n- 阅读 448\n- 9 赞\n- 收藏 5',
+    0,
     '二路归并排序算法第二趟排序后的序列分析',
     'published',
     1,
@@ -91,6 +115,8 @@ INSERT INTO posts (title, content, summary, status, user_id, category_id, create
     (
     '码住了！一文教你玩好豆包AI编程，编程效率原地起飞',
     '看不懂代码？跟它！写不动代码？问豆包！Al助力，编程从此so easy！',
+    '看不懂代码？跟它！写不动代码？问豆包！Al助力，编程从此so easy！',
+    0,
     '豆包AI编程工具使用指南',
     'published',
     1,
@@ -101,6 +127,8 @@ INSERT INTO posts (title, content, summary, status, user_id, category_id, create
     (
     'Python基础总结(十)之函数',
     '函数的定义要使用def关键字，def后面紧跟函数名，给出的为函数的代码块，上述即为一个简单的函数，定义了一个名为test的函数...\n- 阅读 443\n- 4 赞\n- 收藏 11',
+    '函数的定义要使用def关键字，def后面紧跟函数名，给出的为函数的代码块，上述即为一个简单的函数，定义了一个名为test的函数...\n- 阅读 443\n- 4 赞\n- 收藏 11',
+    0,
     'Python函数定义与基础用法详解',
     'published',
     1,

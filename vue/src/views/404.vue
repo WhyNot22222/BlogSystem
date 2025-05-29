@@ -4,7 +4,7 @@
       <h1 class="error-code">404</h1>
       <h2 class="message">页面未找到</h2>
       <p class="description">您访问的页面可能已丢失在数字宇宙中...</p>
-      <router-link to="/" class="home-link">
+      <router-link to="/home" class="home-link">
         <button class="return-btn">返回首页</button>
       </router-link>
     </div>

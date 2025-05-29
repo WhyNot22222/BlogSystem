@@ -6,6 +6,8 @@ public class Post {
     private Long id;
     private String title;
     private String content;
+    private String formattedContent;
+    private Integer views;
     private String summary;
     private String coverUrl;
     private LocalDateTime createdAt;
@@ -128,6 +130,22 @@ public class Post {
 
     public void setPinned(Boolean pinned) {
         isPinned = pinned;
+    }
+
+    public String getFormattedContent() {
+        return formattedContent;
+    }
+
+    public void setFormattedContent(String formattedContent) {
+        this.formattedContent = formattedContent;
+    }
+
+    public Integer getViews() {
+        return views;
+    }
+
+    public void setViews(Integer views) {
+        this.views = views;
     }
 
     // Getters and Setters

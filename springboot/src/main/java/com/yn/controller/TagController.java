@@ -16,18 +16,23 @@ public class TagController {
     private TagService tagService;
 
     @PostMapping
-    public Result createTag(@RequestBody String name) {
+    public Result createTag(@RequestParam String name) {
+        // 检查标签是否已存在
+        Tag existingTag = tagService.getTagByName(name);
+        if (existingTag != null) {
+            return Result.success(existingTag.getId());
+        }
+        
+        // 创建新标签
         Tag tag = new Tag();
         tag.setName(name);
         Long tagId = tagService.createTag(tag);
-        return tagId != null ?
-                Result.success(tagId) :
-                Result.error("标签名称已存在");
+        return Result.success(tagId);
     }
 
-    @DeleteMapping("/{id}")
-    public Result deleteTag(@PathVariable Long id) {
-        boolean success = tagService.deleteTag(id);
+    @DeleteMapping
+    public Result deleteTag(@RequestParam Long tagId) {
+        boolean success = tagService.deleteTag(tagId);
         return success ?
                 Result.success(true) :
                 Result.error("标签删除失败");
@@ -43,6 +48,14 @@ public class TagController {
     public Result getTagByName(@RequestParam String name) {
         Tag tag = tagService.getTagByName(name);
         return tag != null ?
+                Result.success(tag) :
+                Result.error("标签不存在");
+    }
+
+    @GetMapping("/searchById")
+    public Result getTagById(@RequestParam Long tagId) {
+        Tag tag = tagService.getTagById(tagId);
+        return tag!= null?
                 Result.success(tag) :
                 Result.error("标签不存在");
     }

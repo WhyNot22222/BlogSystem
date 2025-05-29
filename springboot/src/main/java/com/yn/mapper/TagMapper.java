@@ -11,4 +11,5 @@ public interface TagMapper {
     int deleteById(Long id);
     List<Tag> selectAll();
     Tag selectByName(String name);
+    Tag selectById(Long id);
 }

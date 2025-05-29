@@ -49,6 +49,10 @@ const router = createRouter({
       component: import('../views/BlogEditor.vue')
     },
     {
+      path: '/enhanced-blog-editor',
+      component: import('../views/EnhancedBlogEditor.vue')
+    },
+    {
       path: '/blog-detail',
       component: import('../views/BlogDetail.vue')
     },

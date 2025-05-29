@@ -1,6 +1,5 @@
 package com.yn.service;
 
-import com.github.pagehelper.PageHelper;
 import com.yn.entity.Post;
 import com.yn.mapper.PostMapper;
 import jakarta.annotation.Resource;

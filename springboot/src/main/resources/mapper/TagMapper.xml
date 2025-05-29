@@ -21,4 +21,8 @@
         SELECT id, name FROM tags WHERE name = #{name}
     </select>
 
+    <select id="selectById" resultType="com.yn.entity.Tag">
+        SELECT id, name FROM tags WHERE id = #{id}
+    </select>
+
 </mapper>

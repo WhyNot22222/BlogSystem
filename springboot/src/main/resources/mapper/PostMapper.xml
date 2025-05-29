@@ -6,26 +6,28 @@
 
     <insert id="insertPost" parameterType="com.yn.entity.Post" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO posts (
-            title, content, summary, cover_url, 
-            status, user_id, category_id, 
+            title, content, formatted_content, views,
+            summary, cover_url, status, user_id, category_id, 
             allow_comments, is_public, is_pinned,
-            created_at, updated_at  <!-- 新增字段 -->
+            created_at, updated_at, published_at
         )
         VALUES (
-            #{title}, #{content}, #{summary}, #{coverUrl}, 
-            #{status}, #{userId}, #{categoryId}, 
+            #{title}, #{content}, #{formattedContent}, #{views},
+            #{summary}, #{coverUrl}, #{status}, #{userId}, #{categoryId}, 
             #{allowComments}, #{isPublic}, #{isPinned},
-            CURRENT_TIMESTAMP, CURRENT_TIMESTAMP  <!-- 设置默认时间 -->
+            #{createdAt}, #{updatedAt}, #{publishedAt}
         )
     </insert>
 
     <update id="updatePost" parameterType="com.yn.entity.Post">
         UPDATE posts SET
             title = #{title}, content = #{content}, 
+            formatted_content = #{formattedContent},
+            views = #{views},
             summary = #{summary}, cover_url = #{coverUrl},
             status = #{status}, category_id = #{categoryId}, 
             allow_comments = #{allowComments}, is_public = #{isPublic}, 
-            is_pinned = #{isPinned}, updated_at = CURRENT_TIMESTAMP  <!-- 更新时自动更新时间 -->
+            is_pinned = #{isPinned}, updated_at = #{updatedAt}, published_at = #{publishedAt}
         WHERE id = #{id}
     </update>
 
@@ -37,9 +39,17 @@
         DELETE FROM posts WHERE id = #{id}
     </delete>
 
+    <!-- 公共查询条件 -->
+    <sql id="publishedConditions">
+        status = 'published'
+        AND is_public = true
+        AND (published_at IS NULL OR published_at &lt;= NOW())
+    </sql>
+
     <select id="selectPublishedPosts" resultType="com.yn.entity.Post">
         SELECT * FROM posts
-        WHERE status = 'published'
+        WHERE 
+        <include refid="publishedConditions"/>
         ORDER BY created_at DESC
     </select>
 
@@ -48,6 +58,8 @@
         FROM posts p
         JOIN follow f ON p.user_id = f.followed_id
         WHERE f.follower_id = #{followerId}
+        AND 
+        <include refid="publishedConditions"/>
         ORDER BY p.created_at DESC
     </select>
 
@@ -57,7 +69,8 @@
         <foreach item="userId" collection="userIds" open="(" separator="," close=")">
             #{userId}
         </foreach>
-        AND status = 'published'
+        AND 
+        <include refid="publishedConditions"/>
         ORDER BY created_at DESC
     </select>
 

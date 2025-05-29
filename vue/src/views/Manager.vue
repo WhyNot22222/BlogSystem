@@ -244,7 +244,7 @@ const handleLogout = () => {
 
 const openBlogEditor = () => {
   // Open blog editor in a new tab
-  window.open('/blog-editor', '_blank')
+  window.open('/enhanced-blog-editor', '_blank')
 }
 </script>
 
