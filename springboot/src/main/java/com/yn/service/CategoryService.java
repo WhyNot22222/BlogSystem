@@ -20,15 +20,17 @@ public class CategoryService {
         return categoryMapper.selectCategoryById(id);
     }
 
-    public int addCategory(Category category) {
-        return categoryMapper.insertCategory(category);
+    public Category createCategory(Category category) {
+        categoryMapper.insertCategory(category);
+        return category;
     }
 
-    public int updateCategory(Category category) {
-        return categoryMapper.updateCategory(category);
+    public Category updateCategory(Category category) {
+        int updatedRows = categoryMapper.updateCategory(category);
+        return updatedRows > 0 ? category : null;
     }
 
-    public int deleteCategory(Long id) {
-        return categoryMapper.deleteCategory(id);
+    public boolean deleteCategory(Long id) {
+        return categoryMapper.deleteCategory(id) > 0;
     }
 }

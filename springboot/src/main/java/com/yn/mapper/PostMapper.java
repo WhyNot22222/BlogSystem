@@ -10,4 +10,6 @@ public interface PostMapper {
     Post selectPostById(Long id);
     int deletePost(Long id);
     List<Post> selectPublishedPosts();
+    List<Post> selectPostsByFollowerId(Long followerId);
+    List<Post> selectPostsByUserIds(List<Long> userIds);
 }

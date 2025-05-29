@@ -11,6 +11,15 @@ public class FavoritesCollection {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    public FavoritesCollection() {}
+
+    public FavoritesCollection(Long userId, String name, String description, Boolean isPublic) {
+        this.userId = userId;
+        this.name = name;
+        this.description = description;
+        this.isPublic = isPublic;
+    }
+
     public Long getId() {
         return id;
     }
@@ -39,8 +48,8 @@ public class FavoritesCollection {
         return isPublic;
     }
 
-    public void setPublic(Boolean aPublic) {
-        isPublic = aPublic;
+    public void setPublic(Boolean isPublic) {
+        this.isPublic = isPublic;
     }
 
     public String getDescription() {

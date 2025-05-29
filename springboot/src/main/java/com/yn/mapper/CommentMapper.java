@@ -10,5 +10,4 @@ public interface CommentMapper {
     Comment findById(Long id);
     void deleteById(Long id);
     List<Long> findCommentTreeIds(Long id);
-    void batchDelete(List<Long> ids);
 }

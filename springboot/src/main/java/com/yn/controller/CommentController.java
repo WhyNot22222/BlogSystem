@@ -4,8 +4,9 @@ import com.yn.common.Result;
 import com.yn.entity.Comment;
 import com.yn.service.CommentService;
 import jakarta.annotation.Resource;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/comment")
@@ -15,16 +16,24 @@ public class CommentController {
 
     @PostMapping("/add")
     public Result addComment(@RequestBody Comment comment) {
-        return commentService.addComment(comment);
+        Comment savedComment = commentService.addComment(comment);
+        return savedComment != null ?
+                Result.success(savedComment) :
+                Result.error("父评论不存在");
     }
 
-    @GetMapping("/post/{postId}")
-    public Result getByPostId(@PathVariable Long postId) {
-        return commentService.getPostComments(postId);
+    @GetMapping("/post")
+    public Result getByPostId(@RequestParam Long postId) {
+        List<Comment> comments = commentService.getPostComments(postId);
+        return Result.success(comments);
     }
 
+    // 添加删除评论端点（原Service有此功能但Controller未暴露）
     @DeleteMapping("/{id}")
     public Result deleteComment(@PathVariable Long id) {
-        return commentService.deleteComment(id);
+        int deletedCount = commentService.deleteComment(id);
+        return deletedCount > 0 ?
+                Result.success("成功删除" + deletedCount + "条评论") :
+                Result.error("评论不存在");
     }
 }

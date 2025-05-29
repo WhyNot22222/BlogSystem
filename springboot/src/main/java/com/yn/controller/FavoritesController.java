@@ -7,6 +7,8 @@ import com.yn.service.FavoritesService;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/favorites")
 public class FavoritesController {
@@ -14,37 +16,54 @@ public class FavoritesController {
     private FavoritesService favoritesService;
 
     @PostMapping("/collection")
-    public Result createCollection(@RequestBody FavoritesCollection collection) {
-        return favoritesService.createCollection(collection);
+    public Result createCollection(
+            @RequestParam Long userId,
+            @RequestParam String name,
+            @RequestParam String description,
+            @RequestParam Boolean isPublic) {
+        FavoritesCollection collection = new FavoritesCollection(userId, name, description, isPublic);
+        FavoritesCollection created = favoritesService.createCollection(collection);
+        return created != null ?
+                Result.success(created) :
+                Result.error("用户不存在");
     }
 
     @GetMapping("/collections")
     public Result getCollectionById(@RequestParam Long collectionId) {
         FavoritesCollection collection = favoritesService.getCollectionById(collectionId);
-        return Result.success(collection);
+        return collection != null ?
+                Result.success(collection) :
+                Result.error("收藏夹不存在");
     }
 
     @PostMapping("/add")
     public Result addFavorite(@RequestBody Favorites favorite) {
-        return favoritesService.addFavorite(favorite);
+        boolean success = favoritesService.addFavorite(favorite);
+        return success ?
+                Result.success("收藏成功") :
+                Result.error("已收藏该内容");
     }
 
     @DeleteMapping("/remove")
     public Result removeFavorite(
-        @RequestParam Long postId,
-        @RequestParam Long userId) {
-        return favoritesService.removeFavorite(postId, userId);
+            @RequestParam Long postId,
+            @RequestParam Long userId) {
+        boolean success = favoritesService.removeFavorite(postId, userId);
+        return success ?
+                Result.success("取消收藏成功") :
+                Result.error("收藏记录不存在");
     }
 
     @GetMapping("/collections/list")
     public Result getCollections(@RequestParam Long userId) {
-        return favoritesService.getByUserId(userId);
+        List<FavoritesCollection> collections = favoritesService.getByUserId(userId);
+        return Result.success(collections);
     }
 
     @GetMapping("/check")
     public Result checkFavoriteExists(
-        @RequestParam Long postId,
-        @RequestParam Long userId) {
+            @RequestParam Long postId,
+            @RequestParam Long userId) {
         boolean exists = favoritesService.existsByPostAndUser(postId, userId);
         return Result.success(exists);
     }
@@ -57,6 +76,7 @@ public class FavoritesController {
 
     @GetMapping("/collection/count")
     public Result getCollectionItemCount(@RequestParam Long collectionId) {
-        return Result.success(favoritesService.countByCollectionId(collectionId));
+        int count = favoritesService.countByCollectionId(collectionId);
+        return Result.success(count);
     }
 }

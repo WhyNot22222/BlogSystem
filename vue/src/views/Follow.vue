@@ -1,60 +1,41 @@
 <template>
   <div class="follow-container">
     <!-- 左侧：关注的人发布的博客列表 -->
-    <div class="blog-feed">
+    <div class="post-feed">
       <div class="feed-header">
         <h2 class="section-title">关注动态</h2>
       </div>
 
-      <div class="blog-list">
-        <div v-for="blog in followedBlogs" :key="blog.id" class="blog-card">
-          <div class="blog-header">
+      <div class="post-list">
+        <div v-for="post in followedBlogs" :key="post.id" class="post-card">
+          <div class="post-header">
             <div class="author-info">
-              <el-avatar :size="46" :src="blog.authorAvatar" class="author-avatar"></el-avatar>
+              <el-avatar :size="46" :src="post.authorAvatar" class="author-avatar"></el-avatar>
               <div class="author-details">
-                <div class="author-name">{{ blog.authorName }}</div>
+                <div class="author-name">{{ post.authorName }}</div>
                 <div class="post-meta">
-                  <span class="post-time">{{ blog.postTime }}</span>
-                  <span class="post-category" v-if="blog.category">{{ blog.category }}</span>
+                  <span class="post-time">{{ post.publishedAt }}</span>
+                  <span class="post-category" v-if="post.category">{{ post.category }}</span>
                 </div>
               </div>
             </div>
-            <div class="follow-status" v-if="blog.isNew">
+            <div class="follow-status" v-if="post.isNew">
               <span class="new-post-badge">新内容</span>
             </div>
           </div>
 
-          <div class="blog-content" @click="viewBlogDetail(blog.id)">
-            <h3 class="blog-title">{{ blog.title }}</h3>
-            <p class="blog-summary">{{ blog.summary }}</p>
+          <div class="post-content" @click="viewPostDetail(post)">
+            <h3 class="post-title">{{ post.title }}</h3>
+            <p class="post-summary">{{ post.summary }}</p>
 
-            <div v-if="blog.coverImage" class="blog-image" :class="{'wide-image': blog.wideImage}">
-              <img :src="blog.coverImage" :alt="blog.title" />
+            <div v-if="post.coverImage" class="post-image" :class="{'wide-image': post.wideImage}">
+              <img :src="post.coverImage" :alt="post.title" />
             </div>
           </div>
 
-          <div class="blog-footer">
-            <div class="blog-tags" v-if="blog.tags && blog.tags.length">
-              <span v-for="tag in blog.tags" :key="tag" class="blog-tag"># {{ tag }}</span>
-            </div>
-
-            <div class="blog-actions">
-              <div class="action-button" :class="{'active': blog.isLiked}" @click="toggleLike(blog)">
-                <el-icon><ThumbsUp /></el-icon>
-                <span>{{ blog.likes }}</span>
-              </div>
-              <div class="action-button">
-                <el-icon><ChatDotRound /></el-icon>
-                <span>{{ blog.comments }}</span>
-              </div>
-              <div class="action-button">
-                <el-icon><Share /></el-icon>
-                <span>分享</span>
-              </div>
-              <div class="action-button">
-                <el-icon><Star /></el-icon>
-                <span>收藏</span>
-              </div>
+          <div class="post-footer">
+            <div class="post-tags" v-if="post.tags && post.tags.length">
+              <span v-for="tag in post.tags" :key="tag" class="post-tag"># {{ tag }}</span>
             </div>
           </div>
         </div>
@@ -67,9 +48,9 @@
             <el-button type="primary" class="discover-btn">发现更多博主</el-button>
           </el-empty>
         </div>
-
-        <div class="load-more" v-if="followedBlogs.length > 0">
-          <el-button plain>加载更多</el-button>
+      
+        <div class="load-more" v-if="hasMorePosts">
+          <el-button plain @click="handleLoadMore">加载更多</el-button>
         </div>
       </div>
     </div>
@@ -126,157 +107,83 @@
       </div>
 
     </div>
+
+    <!-- 帖子详情对话框 -->
+    <el-dialog
+        v-model="showPostDetail"
+        :title="currentPost?.title || '帖子详情'"
+        width="70%"
+        destroy-on-close
+        :append-to-body="true"
+        :lock-scroll="false"
+    >
+      <div v-if="currentPost" class="post-detail">
+        <div class="post-detail-header">
+          <div class="user-info">
+            <el-avatar :size="40" :src="currentPost.authorAvatar"></el-avatar>
+            <div class="user-details">
+              <div class="username">{{ currentPost.authorName }}</div>
+              <div class="post-time">{{ currentPost.postTime }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="post-detail-content">
+          {{ currentPost.content }}
+        </div>
+
+        <div v-if="currentPost.images?.length" class="post-detail-images">
+          <el-image
+              v-for="(image, index) in currentPost.images"
+              :key="index"
+              :src="image.url"
+              :preview-src-list="currentPost.images.map(img => img.url)"
+              fit="cover"
+              class="detail-image"
+          />
+        </div>
+
+        <div class="post-detail-tags">
+          <el-tag v-for="tag in currentPost.tags" :key="tag" size="small">
+            #{{ tag }}
+          </el-tag>
+        </div>
+      </div>
+    </el-dialog>
+
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import {
-  ChatDotRound,
-  Share,
   Search,
-  Star,
   Check
 } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import request from '@/utils/request'
+import { useStore } from "vuex";
+import defaultAvatar from '@/imgs/default.jpg'
+import { getUserName, fetchUserAvatar } from '@/utils/userHelper';
 
-// 搜索关注用户
-const searchQuery = ref('')
+const store = useStore();
+const userId = computed(() => store.getters.userId)
 
-// 模拟数据 - 关注的博客
-const followedBlogs = ref([
-  {
-    id: 1,
-    authorName: '你一身傲骨怎能输',
-    authorAvatar: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-vLagbjvmjN3BCyqNQ8Ih1BNMAcujss.png',
-    postTime: '1分钟前',
-    title: '正则语言的超能力与短板揭秘',
-    summary: '正则语言是一种简单且直接的字符串筛选规则，具有闭包性、有限记忆、不能处理复杂配对...',
-    coverImage: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-vLagbjvmjN3BCyqNQ8Ih1BNMAcujss.png',
-    likes: 12,
-    comments: 3,
-    isNew: true,
-    isLiked: false,
-    category: '技术',
-    tags: ['正则表达式', '编程语言']
-  },
-  {
-    id: 2,
-    authorName: '独泪了无痕',
-    authorAvatar: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-vLagbjvmjN3BCyqNQ8Ih1BNMAcujss.png',
-    postTime: '25分钟前',
-    title: '带你搞懂@Valid和@Validated的区别',
-    summary: '本文介绍了Spring Boot中用于参数校验的两个核心注解@Valid和@Validated的用法及区别...',
-    coverImage: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-vLagbjvmjN3BCyqNQ8Ih1BNMAcujss.png',
-    likes: 24,
-    comments: 8,
-    isNew: false,
-    isLiked: true,
-    category: '后端',
-    wideImage: true,
-    tags: ['Spring Boot', '参数校验']
-  },
-  {
-    id: 3,
-    authorName: 'fei_sun',
-    authorAvatar: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-vLagbjvmjN3BCyqNQ8Ih1BNMAcujss.png',
-    postTime: '1小时前',
-    title: '【计网】作业5',
-    summary: '最小的212.56.1000 0100.0。可分配2^9 -2=510-2=508。根据子网掩码，比较网络部分是否...',
-    coverImage: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-vLagbjvmjN3BCyqNQ8Ih1BNMAcujss.png',
-    likes: 18,
-    comments: 5,
-    isNew: false,
-    isLiked: false,
-    category: '学习笔记',
-    tags: ['计算机网络', '子网掩码']
-  },
-  {
-    id: 4,
-    authorName: 'FBI HackerHarry浩',
-    authorAvatar: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-vLagbjvmjN3BCyqNQ8Ih1BNMAcujss.png',
-    postTime: '6小时前',
-    title: 'Linux云计算训练营笔记day11（Linux CentOS7）',
-    summary: 'Linux云计算是一种通过互联网按需提供计算资源的服务模式，广泛应用于服务器管理和项目...',
-    coverImage: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-vLagbjvmjN3BCyqNQ8Ih1BNMAcujss.png',
-    likes: 32,
-    comments: 7,
-    isNew: false,
-    isLiked: true,
-    category: '运维',
-    tags: ['Linux', '云计算', 'CentOS7']
-  }
-])
+const searchQuery = ref('')       // 搜索关注用户
+const followedBlogs = ref([]);    // 用于存储关注的博客
+const followingUsers = ref([]);   // 用于存储关注的用户
+const showPostDetail = ref(false);
+const currentPost = ref(null);
 
-// 模拟数据 - 关注的用户
-const followingUsers = ref([
-  {
-    id: 1,
-    name: '你一身傲骨怎能输',
-    avatar: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-vLagbjvmjN3BCyqNQ8Ih1BNMAcujss.png',
-    bio: '技术博主 | 正则表达式专家',
-    isFollowing: true,
-    isVerified: true
-  },
-  {
-    id: 2,
-    name: '独泪了无痕',
-    avatar: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-vLagbjvmjN3BCyqNQ8Ih1BNMAcujss.png',
-    bio: 'Spring Boot 开发者 | 技术分享',
-    isFollowing: true,
-    isVerified: true
-  },
-  {
-    id: 3,
-    name: 'fei_sun',
-    avatar: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-vLagbjvmjN3BCyqNQ8Ih1BNMAcujss.png',
-    bio: '计算机网络 | 学习笔记分享',
-    isFollowing: true
-  },
-  {
-    id: 4,
-    name: 'FBI HackerHarry浩',
-    avatar: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-vLagbjvmjN3BCyqNQ8Ih1BNMAcujss.png',
-    bio: 'Linux云计算 | 运维工程师',
-    isFollowing: true,
-    isVerified: true
-  },
-  {
-    id: 5,
-    name: '技术小达人',
-    avatar: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-vLagbjvmjN3BCyqNQ8Ih1BNMAcujss.png',
-    bio: '前端开发 | UI设计 | 用户体验',
-    isFollowing: true
-  }
-])
+const viewPostDetail = (post) => {
+  currentPost.value = post;
+  showPostDetail.value = true;
+};
 
-// 推荐关注用户
-const recommendedUsers = ref([
-  {
-    id: 101,
-    name: '前端开发日记',
-    avatar: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-vLagbjvmjN3BCyqNQ8Ih1BNMAcujss.png',
-    bio: 'Vue & React 开发者',
-    followers: '2.3k',
-    isFollowing: false
-  },
-  {
-    id: 102,
-    name: '全栈工程师',
-    avatar: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-vLagbjvmjN3BCyqNQ8Ih1BNMAcujss.png',
-    bio: '分享全栈开发技巧',
-    followers: '5.1k',
-    isFollowing: false
-  },
-  {
-    id: 103,
-    name: 'AI研究员',
-    avatar: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-vLagbjvmjN3BCyqNQ8Ih1BNMAcujss.png',
-    bio: '人工智能与机器学习',
-    followers: '3.7k',
-    isFollowing: false
-  }
-])
+// 添加时间格式化方法（如果尚未存在）
+const formatTime = (timestamp) => {
+  return dayjs(timestamp).format('YYYY-MM-DD HH:mm');
+};
 
 // 过滤关注用户列表
 const filteredFollowingUsers = computed(() => {
@@ -288,53 +195,42 @@ const filteredFollowingUsers = computed(() => {
 })
 
 // 切换关注状态
-const toggleFollow = (user) => {
-  user.isFollowing = !user.isFollowing
-  if (user.isFollowing) {
-    ElMessage({
-      message: `已关注 ${user.name}`,
-      type: 'success',
-      offset: 70
-    })
-  } else {
-    ElMessage({
-      message: `已取消关注 ${user.name}`,
-      type: 'info',
-      offset: 70
-    })
-  }
-}
+const toggleFollow = async (user) => {
+  try {
+    // 取消关注确认对话框
+    if (user.isFollowing) {
+      try {
+        await ElMessageBox.confirm('确定要取消关注该用户吗？', '取消关注确认', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        });
+      } catch {
+        return; // 用户取消操作直接返回
+      }
+    }
 
-// 切换点赞状态
-const toggleLike = (blog) => {
-  blog.isLiked = !blog.isLiked
-  if (blog.isLiked) {
-    blog.likes++
+    const method = user.isFollowing ? 'delete' : 'post';
+    const endpoint = user.isFollowing ? '/follow/unfollow' : '/follow/add';
+    
+    await request[method](endpoint, null, {
+      params: {
+        followerId: store.getters.userId,
+        followedId: user.id
+      }
+    });
+    
+    user.isFollowing = !user.isFollowing;
     ElMessage({
-      message: '点赞成功',
-      type: 'success',
+      message: user.isFollowing? '已关注' : '已取消关注',
+      type: user.isFollowing? 'success' : 'success',
       offset: 70
     })
-  } else {
-    blog.likes--
-    ElMessage({
-      message: '已取消点赞',
-      type: 'info',
-      offset: 70
-    })
+  } catch (error) {
+    console.error('操作失败:', error);
+    ElMessage.error(`操作失败: ${error.response?.data?.msg || error.message}`);
   }
-}
-
-// 查看博客详情
-const viewBlogDetail = (blogId) => {
-  console.log('查看博客详情:', blogId)
-  // 实际应用中这里会跳转到博客详情页
-  ElMessage({
-    message: `正在查看博客 ID: ${blogId}`,
-    type: 'info',
-    offset: 70
-  })
-}
+};
 
 // 查看用户资料
 const viewUserProfile = (userId) => {
@@ -347,21 +243,89 @@ const viewUserProfile = (userId) => {
   })
 }
 
-// 模拟获取数据
-const fetchFollowedBlogs = () => {
-  // 实际应用中这里会调用API获取数据
-  console.log('获取关注的博客数据')
-}
+// 在setup部分添加分页状态变量
+const page = ref(1);
+const hasMorePosts = ref(false);
 
-const fetchFollowingUsers = () => {
-  // 实际应用中这里会调用API获取数据
-  console.log('获取关注的用户数据')
-}
+// 获取关注动态
+const fetchFollowedPosts = async () => {
+  try {
+    const followingRes = await request.get('/follow/list-following', {
+      params: { followerId: userId.value }
+    });
+    // console.log("获取关注列表：", followingRes.data)
+    if (followingRes.code === '200') {
+      const followedIds = followingRes.data.map(user => user.id);
+      
+      const blogRes = await request.get('/posts/followed', {
+        params: { userIds: followedIds.join(',') }
+      });
 
+      if (blogRes.code === '200') {
+        followedBlogs.value = await Promise.all(
+          blogRes.data.map(async blog => ({
+            ...blog,
+            authorName: await getUserName(blog.userId),
+            authorAvatar: await fetchUserAvatar(blog.userId),
+            isNew: new Date().getTime() - new Date(blog.createdAt).getTime() < 86400000,
+          }))
+        );
+        console.log("获取关注动态：", followedBlogs.value)
+        hasMorePosts.value = blogRes.data.length >= 10;
+      }
+    }
+  } catch (error) {
+    console.error('获取数据失败:', error);
+    ElMessage.error('数据加载失败');
+  }
+};
+
+// 获取关注列表
+const fetchFollowingUsers = async () => {
+  try {
+    const res = await request.get('/follow/list-following', {
+      params: { followerId: userId.value }
+    });
+    if (res.code === '200') {
+      // 使用Promise.all处理异步头像请求
+      followingUsers.value = await Promise.all(
+        res.data.map(async user => {
+          try {
+            const avatarUrl = await fetchUserAvatar(user.id);
+            return {
+              id: user.id,
+              name: user.username || '匿名用户',
+              avatar: avatarUrl || defaultAvatar,
+              bio: user.bio || '暂无个人介绍',
+              isFollowing: true,
+              isVerified: user.certified || false
+            };
+          } catch (error) {
+            console.error('获取用户头像失败:', error);
+            return {
+              ...user,
+              avatar: defaultAvatar
+            };
+          }
+        })
+      );
+    }
+  } catch (error) {
+    console.error('获取关注列表失败:', error);
+  }
+};
+
+// 在setup部分添加分页逻辑
+const handleLoadMore = () => {
+  page.value++;
+  fetchFollowedPosts();
+};
+
+// 在onMounted中修改调用方式
 onMounted(() => {
-  fetchFollowedBlogs()
-  fetchFollowingUsers()
-})
+  fetchFollowedPosts();
+  fetchFollowingUsers();
+});
 </script>
 
 <style scoped>
@@ -375,7 +339,7 @@ onMounted(() => {
 }
 
 /* 左侧博客列表样式 */
-.blog-feed {
+.post-feed {
   flex: 1;
   background-color: #fff;
   border-radius: 12px;
@@ -413,20 +377,20 @@ onMounted(() => {
   font-weight: normal;
 }
 
-.blog-list {
+.post-list {
   padding: 0 24px 24px;
 }
 
-.blog-card {
+.post-card {
   padding: 24px 0;
   border-bottom: 1px solid #f0f0f0;
 }
 
-.blog-card:last-child {
+.post-card:last-child {
   border-bottom: none;
 }
 
-.blog-header {
+.post-header {
   display: flex;
   justify-content: space-between;
   margin-bottom: 16px;
@@ -482,12 +446,12 @@ onMounted(() => {
   border-radius: 10px;
 }
 
-.blog-content {
+.post-content {
   margin-bottom: 16px;
   cursor: pointer;
 }
 
-.blog-title {
+.post-title {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 10px;
@@ -495,14 +459,14 @@ onMounted(() => {
   line-height: 1.4;
 }
 
-.blog-summary {
+.post-summary {
   font-size: 14px;
   color: #666;
   margin-bottom: 16px;
   line-height: 1.6;
 }
 
-.blog-image {
+.post-image {
   width: 100%;
   margin-top: 12px;
   border-radius: 10px;
@@ -510,35 +474,35 @@ onMounted(() => {
   max-height: 240px;
 }
 
-.blog-image.wide-image {
+.post-image.wide-image {
   max-height: 300px;
 }
 
-.blog-image img {
+.post-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.3s;
 }
 
-.blog-content:hover .blog-image img {
+.post-content:hover .post-image img {
   transform: scale(1.02);
 }
 
-.blog-footer {
+.post-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: 16px;
 }
 
-.blog-tags {
+.post-tags {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
 }
 
-.blog-tag {
+.post-tag {
   font-size: 13px;
   color: #666;
   background-color: #f5f5f5;
@@ -548,7 +512,7 @@ onMounted(() => {
   transition: all 0.2s;
 }
 
-.blog-tag:hover {
+.post-tag:hover {
   background-color: #eee;
   color: #333;
 }
@@ -756,22 +720,106 @@ onMounted(() => {
 
 
 /* 确保两个区域独立滚动 */
-.blog-feed, .following-list {
+.post-feed, .following-list {
   overflow-y: auto;
   scrollbar-width: thin;
 }
 
-.blog-feed::-webkit-scrollbar, .following-list::-webkit-scrollbar {
+.post-feed::-webkit-scrollbar, .following-list::-webkit-scrollbar {
   width: 6px;
 }
 
-.blog-feed::-webkit-scrollbar-thumb, .following-list::-webkit-scrollbar-thumb {
+.post-feed::-webkit-scrollbar-thumb, .following-list::-webkit-scrollbar-thumb {
   background-color: #ddd;
   border-radius: 3px;
 }
 
-.blog-feed::-webkit-scrollbar-track, .following-list::-webkit-scrollbar-track {
+.post-feed::-webkit-scrollbar-track, .following-list::-webkit-scrollbar-track {
   background-color: #f5f5f5;
+}
+
+/* 帖子详情对话框样式 */
+.post-detail {
+  padding: 20px;
+}
+
+.post-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-details {
+  line-height: 1.4;
+}
+
+.username {
+  font-weight: 600;
+  font-size: 16px;
+  color: #333;
+}
+
+.post-time {
+  font-size: 13px;
+  color: #999;
+}
+
+.post-detail-content {
+  font-size: 15px;
+  line-height: 1.8;
+  color: #444;
+  margin-bottom: 24px;
+  white-space: pre-wrap;
+}
+
+.post-detail-images {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.detail-image {
+  width: 100%;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.detail-image:hover {
+  transform: scale(1.02);
+}
+
+.post-detail-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* 添加动画效果 */
+.el-dialog {
+  transition: all 0.3s ease-out;
+}
+
+/* 调整对话框标题样式 */
+:deep(.el-dialog__header) {
+  padding: 20px;
+  border-bottom: 1px solid #f0f0f0;
+  margin-right: 0;
+}
+
+:deep(.el-dialog__title) {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
 }
 
 /* 响应式设计 */
@@ -786,7 +834,7 @@ onMounted(() => {
     max-height: 500px;
   }
 
-  .blog-feed {
+  .post-feed {
     height: auto;
     max-height: calc(100vh - 600px);
   }
@@ -801,7 +849,7 @@ onMounted(() => {
     font-size: 13px;
   }
 
-  .blog-title {
+  .post-title {
     font-size: 16px;
   }
 

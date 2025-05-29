@@ -64,6 +64,17 @@
                   <div class="post-time">{{ formatTime(post.createdAt) }}</div>
                 </div>
               </div>
+              <!-- 新增关注按钮 -->
+              <div class="follow-section" v-if="post.author.id !== currentUser.id">
+                <el-button
+                    :type="post.author.isFollowed ? 'default' : 'primary'"
+                    size="small"
+                    @click="toggleFollow(post.author)"
+                    :loading="post.author.followLoading"
+                >
+                  {{ post.author.isFollowed ? '已关注' : '关注' }}
+                </el-button>
+              </div>
             </div>
 
             <div class="post-title" @click="viewPostDetail(post)">{{ post.title }}</div>
@@ -332,6 +343,14 @@
                   </el-icon>
                   <span>{{ comment.likes }}</span>
                 </div>
+                <div class="action-item" @click="toggleReplyInput(comment)">
+                  <el-icon>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                  </el-icon>
+                  <span>{{ comment.replyCount || '' }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -458,6 +477,7 @@ import { Plus } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import request from '@/utils/request';
 import { useStore } from "vuex";
+import { fetchUserAvatar } from '@/utils/userHelper';
 
 const store = useStore();
 const userId = computed(() => store.getters.userId)
@@ -555,10 +575,15 @@ const filteredPosts = computed(() => {
 
   // 根据选项卡排序
   if (activeTab.value === 'hot') {
+    // 热门排序逻辑（可保留原有算法）
     result.sort((a, b) => (b.likes + b.comments.length * 2) - (a.likes + a.comments.length * 2));
   } else if (activeTab.value === 'latest') {
-    result.sort((a, b) => b.createdAt - a.createdAt);
+    // 按时间倒序（最新在前）
+    result.sort((a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
   } else if (activeTab.value === 'mostLiked') {
+    // 按点赞数倒序
     result.sort((a, b) => b.likes - a.likes);
   }
 
@@ -755,8 +780,7 @@ const toggleLike = async (post) => {
   }
 };
 
-// 方法 - 提交评论
-const submitComment = () => {
+const submitComment = async () => {
   if (!newComment.value.trim()) {
     ElMessage.warning('请输入评论内容');
     return;
@@ -764,32 +788,45 @@ const submitComment = () => {
 
   commentSubmitting.value = true;
 
-  // 模拟API请求延迟
-  setTimeout(() => {
-    // 模拟添加新评论
-    const newCommentObj = {
-      id: Date.now(),
-      content: newComment.value,
-      author: currentUser,
-      createdAt: new Date(),
-      likes: 0,
-      isLiked: false
-    };
+  try {
+    const res = await request.post('/comment/add', {
+      postId: commentPost.value.id,
+      userId: currentUser.id,
+      content: newComment.value.trim()
+    });
 
-    // 添加到当前评论帖子
-    commentPost.value.comments.unshift(newCommentObj);
+    if (res.code === '200') {
+      // 添加真实返回的评论数据
+      const newCommentObj = {
+        ...res.data,
+        author: {
+          name: currentUser.username,
+          avatar: currentUser.avatar
+        },
+        likes: 0,
+        isLiked: false
+      };
 
-    // 同步到原始帖子
-    const originalPost = posts.value.find(p => p.id === commentPost.value.id);
-    if (originalPost) {
-      originalPost.comments.unshift(newCommentObj);
+      // 更新当前帖子评论列表
+      commentPost.value.comments.unshift(newCommentObj);
+      
+      // 同步到主帖子列表
+      const originalPost = posts.value.find(p => p.id === commentPost.value.id);
+      if (originalPost) {
+        originalPost.comments.unshift(newCommentObj);
+      }
+
+      newComment.value = '';
+      ElMessage.success('评论成功');
+    } else {
+      ElMessage.error(`评论失败：${res.msg}`);
     }
-
-    newComment.value = '';
+  } catch (error) {
+    console.error('评论提交失败:', error);
+    ElMessage.error(`请求异常：${error.message}`);
+  } finally {
     commentSubmitting.value = false;
-
-    ElMessage.success('评论成功');
-  }, 500);
+  }
 };
 
 // 方法 - 点赞评论
@@ -798,6 +835,17 @@ const toggleCommentLike = (comment) => {
   comment.likes += comment.isLiked ? 1 : -1;
 
   // 实际项目中会发送API请求
+};
+
+const toggleReplyInput = (comment) => {
+  // 实现显示/隐藏回复输入框逻辑
+  comment.showReply = !comment.showReply;
+  // 自动聚焦到输入框
+  nextTick(() => {
+    if (comment.showReply) {
+      document.querySelector(`#reply-input-${comment.id}`)?.focus();
+    }
+  });
 };
 
 // 方法 - 根据标签筛选
@@ -857,32 +905,6 @@ const formatTime = (dateInput) => {
   return `${year}-${month}-${day}`;
 };
 
-// 从后端获取头像
-const fetchUserAvatar = async (userId) => {
-  if (!userId) return ''; // 如果 userId 不存在，则返回空字符串
-  try {
-    const res = await request.get('/file/getAvatar', {
-      params: { userId },
-      responseType: 'json' // 假设后端返回json，其中data字段是base64编码的图片
-    });
-    if (res.code === '200' && res.data) {
-      const binaryString = window.atob(res.data);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      const blob = new Blob([bytes], { type: 'image/jpeg' }); // 假设是jpeg，根据实际情况调整
-      return URL.createObjectURL(blob);
-    } else {
-      ElMessage.error('头像加载失败');
-      return '/placeholder.svg?height=40&width=40'; // 返回默认头像
-    }
-  } catch (error) {
-    console.error(`头像加载失败 for userId ${userId}:`, error);
-    return '/placeholder.svg?height=40&width=40'; // 返回默认头像
-  }
-};
-
 // 从后端获取和处理帖子数据
 const fetchAndProcessPosts = async () => {
   loading.value = true;
@@ -890,7 +912,7 @@ const fetchAndProcessPosts = async () => {
   try {
     const res = await request.get('/posts/selectAll');
     if (res.code === '200' && Array.isArray(res.data)) {
-      console.log('从后端获取的帖子数据:', res.data); // 调试输出
+      console.log('从后端获取的帖子数据:', res.data);
       posts.value = await Promise.all(
         res.data.map(async (postData) => {
           let authorName = '未知用户';
@@ -898,7 +920,9 @@ const fetchAndProcessPosts = async () => {
 
           if (postData.userId) {
             try {
-              const userRes = await request.post(`/user/getUser?userId=${postData.userId}`);
+              const userRes = await request.post(`/user/getUser`, null, {
+                params: { userId: postData.userId }
+              });
               if (userRes.code === '200' && userRes.data) {
                 authorName = userRes.data.username || '未知用户';
               }
@@ -937,6 +961,54 @@ const fetchAndProcessPosts = async () => {
               if (favoritesRes.code === '200') {
                 postData.favorites = favoritesRes.data;
               }
+
+              const followCheckRes = await request.get('/follow/check', {
+                params: {
+                  followerId: currentUser.id,
+                  followedId: postData.userId,
+                }
+              })
+              if (followCheckRes.code === '200') {
+                postData.isFollowed = followCheckRes.data;
+              }
+
+              const commentRes = await request.get('/comment/post', {
+                params: {
+                  postId: postData.id,
+                }
+              })
+              if (commentRes.code === '200') {
+                // 并行获取评论作者信息
+                postData.comments = await Promise.all(
+                  commentRes.data.map(async comment => {
+                    try {
+                      const userRes = await request.post(`/user/getUser`, null, {
+                        params: {
+                          userId: comment.userId
+                        }
+                      });
+                      if (userRes.code === '200') {
+                        return {
+                          ...comment,
+                          author: {
+                            name: userRes.data.username || '未知用户',
+                            avatar: await fetchUserAvatar(comment.userId)
+                          }
+                        };
+                      }
+                    } catch (e) {
+                      console.error(`获取用户${comment.userId}信息失败:`, e);
+                    }
+                    return {
+                      ...comment,
+                      author: {
+                        name: '未知用户',
+                        avatar: '/placeholder.svg?height=32&width=32'
+                      }
+                    };
+                  })
+                );
+              }
             } catch (userError) {
               console.error(`获取用户 ${postData.userId} 信息失败:`, userError);
             }
@@ -962,6 +1034,8 @@ const fetchAndProcessPosts = async () => {
               id: postData.userId,
               name: authorName,
               avatar: authorAvatar,
+              isFollowed: postData.isFollowed,
+              followLoading: false
             },
             createdAt: postData.createdAt || new Date().toISOString(), // 后端应提供标准日期字符串
             images: images, // 假设后端直接返回 {url: '...'} 格式的数组
@@ -991,6 +1065,58 @@ const fetchAndProcessPosts = async () => {
     hasMorePosts.value = false;
   } finally {
     loading.value = false;
+  }
+};
+
+// 关注/取消关注用户
+const toggleFollow = async (author) => {
+  if (!currentUser.id) {
+    ElMessage.warning('请先登录');
+    return;
+  }
+
+  const originalIsFollowed = author.isFollowed;
+  author.followLoading = true;
+
+  try {
+    const response = originalIsFollowed
+        ? await request.delete('/follow/unfollow', {
+          params: {
+            followerId: currentUser.id,
+            followedId: author.id
+          }
+        })
+        : await request.post('/follow/add', null, {
+          params: {
+            followerId: currentUser.id,
+            followedId: author.id
+          }
+        });
+
+    if (response.code === '200') {
+      author.isFollowed = !originalIsFollowed;
+
+      // 同步更新所有相关帖子的关注状态
+      posts.value.forEach(post => {
+        if (post.author.id === author.id) {
+          post.author.isFollowed = author.isFollowed;
+        }
+      });
+
+      // 同步更新当前帖子详情的关注状态
+      if (currentPost.value && currentPost.value.author.id === author.id) {
+        currentPost.value.author.isFollowed = author.isFollowed;
+      }
+
+      ElMessage.success(author.isFollowed ? '关注成功' : '取消关注成功');
+    } else {
+      ElMessage.error(response.msg || '操作失败');
+    }
+  } catch (error) {
+    ElMessage.error('请求失败，请检查网络');
+    console.error('关注操作失败:', error);
+  } finally {
+    author.followLoading = false;
   }
 };
 
@@ -1151,33 +1277,39 @@ const createFolder = async () => {
   }
 
   createLoading.value = true
+  console.log('公开：', typeof(!newFolder.isPrivate))
 
   try {
-    // 模拟API请求
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const res = await request.post('/favorites/collection', null, {
+      params: {
+        name: newFolder.name,
+        description: newFolder.description,
+        isPublic: !newFolder.isPrivate,
+        userId: userId.value
+      }
+    })
 
-    // 添加新收藏夹
-    const newFolderData = {
-      id: Date.now(),
-      name: newFolder.name,
-      itemCount: 0,
-      isPrivate: newFolder.isPrivate,
-      isRecentlyUsed: false,
-      loading: false
+    // 更新收藏夹列表
+    if (res.code == '200') {
+      favoriteFolders.value.unshift({
+        id: res.data.id,
+        name: res.data.name,
+        itemCount: 0,
+        isPrivate: !res.data.isPublic,
+        isRecentlyUsed: true,
+        loading: false
+      })
+      // 重置表单
+      newFolder.name = ''
+      newFolder.isPrivate = false
+      newFolder.description = ''
+      
+      showCreateDialog.value = false
+      ElMessage.success('收藏夹创建成功')
     }
-
-    favoriteFolders.value.unshift(newFolderData)
-
-    // 重置表单
-    newFolder.name = ''
-    newFolder.isPrivate = false
-    newFolder.description = ''
-
-    showCreateDialog.value = false
-    ElMessage.success('收藏夹创建成功')
-
   } catch (error) {
-    ElMessage.error('创建失败，请重试')
+    console.error('创建失败:', error)
+    ElMessage.error(error.response?.data?.message || '创建失败，请重试')
   } finally {
     createLoading.value = false
   }
@@ -1246,6 +1378,17 @@ const createFolder = async () => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
+}
+
+.post-header .el-button--primary {
+  background-color: #e83929; /* 与创作按钮保持一致的主题色 */
+  border-color: #e83929;
+}
+
+/* 已关注状态样式 */
+.post-header .el-button--default.is-checked {
+  background-color: #f5f7fa;
+  border-color: #e4e7ed;
 }
 
 .user-info {

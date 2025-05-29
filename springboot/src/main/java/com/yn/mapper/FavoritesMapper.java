@@ -10,7 +10,7 @@ public interface FavoritesMapper {
     void insertCollection(FavoritesCollection collection);
     List<FavoritesCollection> selectByUserId(Long userId);
     void insertFavorite(Favorites favorite);
-    void deleteFavorite(@Param("postId") Long postId,
+    int deleteFavorite(@Param("postId") Long postId,
                         @Param("userId") Long userId);
     Long getCollectionOwnerId(@Param("collectionId") Long collectionId);
     int existsByPostAndUser(@Param("postId") Long postId,

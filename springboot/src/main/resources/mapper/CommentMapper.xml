@@ -5,8 +5,8 @@
 <mapper namespace="com.yn.mapper.CommentMapper">
 
     <insert id="insertComment" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO comments(post_id, parent_id, user_id, content, status)
-        VALUES(#{postId}, #{parentId}, #{userId}, #{content}, #{status})
+        INSERT INTO comments(post_id, parent_id, user_id, content)
+        VALUES(#{postId}, #{parentId}, #{userId}, #{content})
     </insert>
 
     <select id="selectByPostId" resultType="com.yn.entity.Comment">

@@ -1,16 +1,15 @@
 package com.yn.controller;
 
-import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
+import com.github.pagehelper.Page;
 import com.yn.common.Result;
 import com.yn.entity.Post;
 import com.yn.service.PostService;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/posts")
@@ -24,14 +23,10 @@ public class PostController {
      */
     @PostMapping
     public Result createPost(@RequestBody Post post) {
-        try {
-            Post createdPost = postService.createPost(post);
-            return Result.success(createdPost);
-        } catch (Exception e) {
-            System.out.println("创建文章异常：" + e.getMessage());
-            e.printStackTrace();
-            return Result.error("500", "创建文章失败：" + e.getMessage());
-        }
+        Post createdPost = postService.createPost(post);
+        return createdPost != null ?
+                Result.success(createdPost) :
+                Result.error("文章创建失败");
     }
 
     /**
@@ -39,13 +34,11 @@ public class PostController {
      */
     @PutMapping("/{id}")
     public Result updatePost(@PathVariable Long id, @RequestBody Post post) {
-        try {
-            post.setId(id);
-            Post updatedPost = postService.updatePost(post);
-            return Result.success(updatedPost);
-        } catch (Exception e) {
-            return Result.error("500", "更新文章失败：" + e.getMessage());
-        }
+        post.setId(id);
+        Post updatedPost = postService.updatePost(post);
+        return updatedPost != null ?
+                Result.success(updatedPost) :
+                Result.error("文章更新失败，文章不存在");
     }
 
     /**
@@ -53,16 +46,10 @@ public class PostController {
      */
     @GetMapping("/{id}")
     public Result getPost(@PathVariable Long id) {
-        try {
-            Post post = postService.getPostById(id);
-            if (post != null) {
-                return Result.success(post);
-            } else {
-                return Result.error("404", "文章未找到");
-            }
-        } catch (Exception e) {
-            return Result.error("500", "获取文章失败：" + e.getMessage());
-        }
+        Post post = postService.getPostById(id);
+        return post != null ?
+                Result.success(post) :
+                Result.error("文章未找到");
     }
 
     @GetMapping("/selectAll")
@@ -70,4 +57,15 @@ public class PostController {
         List<Post> posts = postService.getPublishedPosts();
         return Result.success(posts);
     }
+
+    @GetMapping("/followed")
+    public Result getFollowedPosts(
+        @RequestParam String userIds) {
+        List<Long> userIdList = Arrays.stream(userIds.split(","))
+                                    .map(Long::valueOf)
+                                    .collect(Collectors.toList());
+        List<Post> posts = postService.getPostsByUserIds(userIdList);
+        return Result.success(posts);
+    }
+
 }

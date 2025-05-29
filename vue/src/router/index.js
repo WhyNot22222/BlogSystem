@@ -6,6 +6,7 @@ import LoginRegister from '../views/LoginRegister.vue'
 import Community from '../views/Community.vue'
 import AccountSettings from '../views/AccountSettings.vue'
 import Follow from '../views/Follow.vue'
+import Collection from '../views/Collection.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -21,7 +22,7 @@ const router = createRouter({
         { path: '/community', component: Community },
         { path: '/subscribe', component: Blog },
         { path: '/follow', component: Follow },
-        { path: '/collect', component: Blog },
+        { path: '/collect', component: Collection },
         { path: '/history', component: Blog },
         { path: '/manage/articles', component: Blog },
         { path: '/manage/users', component: Blog },
@@ -46,6 +47,10 @@ const router = createRouter({
     {
       path: '/blog-editor',
       component: import('../views/BlogEditor.vue')
+    },
+    {
+      path: '/blog-detail',
+      component: import('../views/BlogDetail.vue')
     },
     {
       path: '/test',

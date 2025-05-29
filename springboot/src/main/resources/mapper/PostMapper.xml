@@ -43,4 +43,22 @@
         ORDER BY created_at DESC
     </select>
 
+    <select id="selectPostsByFollowerId" resultType="com.yn.entity.Post">
+        SELECT p.* 
+        FROM posts p
+        JOIN follow f ON p.user_id = f.followed_id
+        WHERE f.follower_id = #{followerId}
+        ORDER BY p.created_at DESC
+    </select>
+
+    <select id="selectPostsByUserIds" resultType="com.yn.entity.Post">
+        SELECT * FROM posts
+        WHERE user_id IN
+        <foreach item="userId" collection="userIds" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+        AND status = 'published'
+        ORDER BY created_at DESC
+    </select>
+
 </mapper>

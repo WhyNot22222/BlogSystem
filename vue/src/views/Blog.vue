@@ -22,7 +22,7 @@
       </div>
 
       <!-- Blog List -->
-      <div v-else class="blog-list">
+      <div v-else class="post-list">
         <div v-for="post in posts" :key="post.id" class="blog-item">
           <div class="author-info">
             <el-avatar :size="36" :src="post.authorAvatar">
@@ -30,8 +30,8 @@
             </el-avatar>
             <span class="author-name">{{ post.authorName }}</span>
           </div>
-          <div class="blog-content">
-            <h2 class="blog-title">{{ post.title }}</h2>
+          <div class="post-content">
+            <h2 class="post-title">{{ post.title }}</h2>
             <p class="blog-desc">{{ post.summary }}</p>
 
             <div class="blog-meta">
@@ -186,7 +186,7 @@ onMounted(() => {
 }
 
 /* Blog List */
-.blog-list {
+.post-list {
   flex: 1;
 }
 
@@ -212,11 +212,11 @@ onMounted(() => {
   color: #333;
 }
 
-.blog-content {
+.post-content {
   flex: 1;
 }
 
-.blog-title {
+.post-title {
   font-size: 18px;
   font-weight: bold;
   margin: 0 0 10px 0;

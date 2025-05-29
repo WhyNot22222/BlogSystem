@@ -205,3 +205,12 @@ CREATE TABLE IF NOT EXISTS favorites (
     FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
 );
+
+-- 关注表
+CREATE TABLE follow (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    follower_id INT NOT NULL COMMENT '关注者ID',
+    followed_id INT NOT NULL COMMENT '被关注者ID',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_follow (follower_id, followed_id)
+);

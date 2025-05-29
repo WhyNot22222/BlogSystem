@@ -1,3 +1,4 @@
+// UserController.java
 package com.yn.controller;
 
 import com.github.pagehelper.PageInfo;
@@ -8,40 +9,41 @@ import com.yn.service.UserService;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/user")
 public class UserController {
     @Resource
     UserService userService;
 
-    @GetMapping("/selectAll")       // 完整请求路径：http://localhost:8080/user/selectAll
-    public Result selectAll(){
-        List<User> userList = userService.selectAll();
-        return Result.success(userList);
+    @GetMapping("/selectAll")
+    public Result selectAll() {
+        return Result.success(userService.selectAll());
     }
 
-    /*
-    * 分页查询
-    * */
     @GetMapping("/selectPage")
     public Result selectPage(@RequestParam(defaultValue = "1") Integer pageNum,
-                             @RequestParam(defaultValue = "10") Integer pageSize) {
+                            @RequestParam(defaultValue = "10") Integer pageSize) {
         PageInfo<User> pageInfo = userService.selectPage(pageNum, pageSize);
         return Result.success(pageInfo);
     }
 
     @PostMapping("/register")
     public Result register(@RequestBody User user) {
-        Result result = userService.register(user);
-        return result;
+        try {
+            userService.register(user);
+            return Result.success("注册成功");
+        } catch (RuntimeException e) {
+            return Result.error(e.getMessage());
+        }
     }
 
     @PostMapping("/login")
     public Result login(@RequestBody LoginRequest loginRequest) {
-        System.out.println("username:" + loginRequest.getUsername() + ", password: " + loginRequest.getPassword());
-        User authenticatedUser = userService.login(loginRequest.getUsername(), loginRequest.getPassword());
+        User authenticatedUser = userService.login(
+            loginRequest.getUsername(), 
+            loginRequest.getPassword()
+        );
+        
         if (authenticatedUser != null) {
             return Result.success(authenticatedUser);
         } else {
@@ -49,34 +51,50 @@ public class UserController {
         }
     }
 
-    // 更新用户信息
     @PutMapping("/updateProfile")
     public Result updateProfile(@RequestBody User user) {
-        return userService.updateProfile(user);
+        try {
+            userService.updateProfile(user);
+            return Result.success("资料更新成功");
+        } catch (RuntimeException e) {
+            return Result.error(e.getMessage());
+        }
     }
 
-    // 修改密码
     @PostMapping("/updatePassword")
     public Result updatePassword(
             @RequestParam Long userId,
             @RequestParam String currentPassword,
             @RequestParam String newPassword
     ) {
-        return userService.updatePassword(userId, currentPassword, newPassword);
+        try {
+            userService.updatePassword(userId, currentPassword, newPassword);
+            return Result.success("密码修改成功");
+        } catch (RuntimeException e) {
+            return Result.error(e.getMessage());
+        }
     }
 
-    // 修改邮箱
     @PostMapping("/updateEmail")
     public Result updateEmail(
             @RequestParam Long userId,
             @RequestParam String newEmail
     ) {
-        return userService.updateEmail(userId, newEmail);
+        try {
+            userService.updateEmail(userId, newEmail);
+            return Result.success("邮箱更新成功");
+        } catch (RuntimeException e) {
+            return Result.error(e.getMessage());
+        }
     }
 
-    // 根据id查询用户信息
     @PostMapping("/getUser")
     public Result getUserById(@RequestParam Long userId) {
-        return userService.findById(userId);
+        User user = userService.findById(userId);
+        if (user != null) {
+            return Result.success(user);
+        } else {
+            return Result.error("用户不存在");
+        }
     }
 }

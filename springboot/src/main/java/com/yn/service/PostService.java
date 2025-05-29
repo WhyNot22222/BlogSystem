@@ -1,5 +1,6 @@
 package com.yn.service;
 
+import com.github.pagehelper.PageHelper;
 import com.yn.entity.Post;
 import com.yn.mapper.PostMapper;
 import jakarta.annotation.Resource;
@@ -19,8 +20,8 @@ public class PostService {
     }
 
     public Post updatePost(Post post) {
-        postMapper.updatePost(post);
-        return post;
+        int updatedRows = postMapper.updatePost(post);
+        return updatedRows > 0 ? post : null;
     }
 
     public Post getPostById(Long id) {
@@ -29,5 +30,13 @@ public class PostService {
 
     public List<Post> getPublishedPosts() {
         return postMapper.selectPublishedPosts();
+    }
+
+    public List<Post> getPostsByFollowedUsers(Long followerId) {
+        return postMapper.selectPostsByFollowerId(followerId);
+    }
+
+    public List<Post> getPostsByUserIds(List<Long> userIds) {
+        return postMapper.selectPostsByUserIds(userIds);
     }
 }
