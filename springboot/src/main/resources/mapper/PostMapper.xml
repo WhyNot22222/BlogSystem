@@ -74,4 +74,84 @@
         ORDER BY created_at DESC
     </select>
 
+    <!-- 查询相同分类的帖子 -->
+    <select id="selectPostsByCategory" resultType="com.yn.entity.Post">
+        SELECT
+            p.id,
+            p.title,
+            p.cover_url AS coverUrl,
+            p.views,
+            u.username AS authorName
+        FROM posts p
+                 JOIN user u ON p.user_id = u.id
+        WHERE p.category_id = #{categoryId}
+          AND p.id != #{excludeId}
+          AND p.status = 'published'
+        ORDER BY p.published_at DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 查询帖子的标签ID -->
+    <select id="selectTagIdsByPostId" resultType="Long">
+        SELECT tag_id
+        FROM post_tags
+        WHERE post_id = #{postId}
+    </select>
+
+    <!-- 查询相同标签的帖子 -->
+    <select id="selectPostsByTags" resultType="com.yn.entity.Post">
+        SELECT
+        p.id,
+        p.title,
+        p.cover_url AS coverUrl,
+        p.views,
+        u.username AS authorName,
+        COUNT(pt.tag_id) AS common_tags
+        FROM posts p
+        JOIN post_tags pt ON p.id = pt.post_id
+        JOIN user u ON p.user_id = u.id
+        WHERE pt.tag_id IN
+        <foreach item="tagId" collection="tagIds" open="(" separator="," close=")">
+            #{tagId}
+        </foreach>
+        AND p.id != #{excludeId}
+        AND p.status = 'published'
+        GROUP BY p.id
+        ORDER BY common_tags DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 查询相同作者的帖子 -->
+    <select id="selectPostsByAuthor" resultType="com.yn.entity.Post">
+        SELECT
+            p.id,
+            p.title,
+            p.cover_url AS coverUrl,
+            p.views,
+            u.username AS authorName
+        FROM posts p
+                 JOIN user u ON p.user_id = u.id
+        WHERE p.user_id = #{authorId}
+          AND p.id != #{excludeId}
+          AND p.status = 'published'
+        ORDER BY p.published_at DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 查询热门帖子 -->
+    <select id="selectPopularPosts" resultType="com.yn.entity.Post">
+        SELECT
+            p.id,
+            p.title,
+            p.cover_url AS coverUrl,
+            p.views,
+            u.username AS authorName
+        FROM posts p
+                 JOIN user u ON p.user_id = u.id
+        WHERE p.id != #{excludeId}
+          AND p.status = 'published'
+        ORDER BY p.views DESC, p.published_at DESC
+        LIMIT #{limit}
+    </select>
+
 </mapper>

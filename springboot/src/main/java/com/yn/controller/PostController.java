@@ -68,4 +68,11 @@ public class PostController {
         return Result.success(posts);
     }
 
+    @GetMapping("/related/{id}")
+    public Result getRelatedPosts(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "3") int limit) {
+        List<Post> relatedPosts = postService.getRelatedPosts(id, limit);
+        return Result.success(relatedPosts);
+    }
 }

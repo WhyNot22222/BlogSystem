@@ -5,13 +5,13 @@
 <mapper namespace="com.yn.mapper.CommentMapper">
 
     <insert id="insertComment" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO comments(post_id, parent_id, user_id, content)
-        VALUES(#{postId}, #{parentId}, #{userId}, #{content})
+        INSERT INTO comments(post_id, parent_id, user_id, content, created_at)
+        VALUES(#{postId}, #{parentId}, #{userId}, #{content}, NOW())
     </insert>
 
     <select id="selectByPostId" resultType="com.yn.entity.Comment">
         SELECT * FROM comments 
-        WHERE post_id = #{postId} AND status = 'approved'
+        WHERE post_id = #{postId}
         ORDER BY created_at DESC
     </select>
 
