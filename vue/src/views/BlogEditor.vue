@@ -297,7 +297,7 @@
 </template>
 
 <script setup>
-import {ref, nextTick, onMounted, onBeforeUnmount, computed} from 'vue'
+import { ref, nextTick, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/utils/request'

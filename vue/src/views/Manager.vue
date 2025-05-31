@@ -22,29 +22,34 @@
             <el-icon><Search /></el-icon>
           </template>
         </el-input>
-        <el-button type="primary" class="search-button" style="margin-left: 10px; background-color: #e83929; border: none;">搜索</el-button>
+        <el-button type="primary" class="search-button">搜索</el-button>
       </div>
 
       <div class="user-actions">
         <el-dropdown trigger="click">
           <div class="user-avatar">
             <el-avatar
-                :size="36"
+                :size="40"
                 @error="handleAvatarError">
               <img :src="avatarUrl" alt="avatar">
             </el-avatar>
           </div>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item @click="handleProfileSettings">个人设置</el-dropdown-item>
-              <el-dropdown-item @click="handleLogout">退出登录</el-dropdown-item>
+              <el-dropdown-item @click="handleProfileSettings">
+                <el-icon><UserFilled /></el-icon>
+                个人设置
+              </el-dropdown-item>
+              <el-dropdown-item divided @click="handleLogout">
+                <el-icon><SwitchButton /></el-icon>
+                退出登录
+              </el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
         <el-button
             type="primary"
             class="create-button"
-            style="background-color: #e83929; border: none;"
             @click="openBlogEditor">
           <el-icon><Plus /></el-icon>创作
         </el-button>
@@ -124,7 +129,11 @@
 
       <!-- Content Area - Scrollable -->
       <main class="content" :class="{ 'content-expanded': isCollapsed }">
-        <RouterView />
+        <RouterView v-slot="{ Component }">
+          <transition name="fade" mode="out-in">
+            <component :is="Component" />
+          </transition>
+        </RouterView>
       </main>
     </div>
   </div>
@@ -147,7 +156,9 @@ import {
   Connection,
   Star,
   Collection,
-  Clock
+  Clock,
+  UserFilled,
+  SwitchButton
 } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import request from '@/utils/request'
@@ -189,6 +200,11 @@ const handleMenuSelect = (index) => {
   if (routeMap[index]) {
     router.push(routeMap[index])
   }
+}
+
+// 处理头像加载错误
+const handleAvatarError = () => {
+  avatarUrl.value = defaultAvatar
 }
 
 // 获取头像方法
@@ -254,17 +270,18 @@ const openBlogEditor = () => {
   background-color: #f7f8fa;
   display: flex;
   flex-direction: column;
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
 }
 
 /* Header Styles */
 .header {
-  height: 60px;
+  height: 64px;
   background-color: #fff;
   border-bottom: 1px solid #eee;
   display: flex;
   align-items: center;
-  padding: 0 20px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  padding: 0 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   position: fixed;
   top: 0;
   left: 0;
@@ -276,7 +293,36 @@ const openBlogEditor = () => {
 .logo-container {
   display: flex;
   align-items: center;
-  min-width: 150px;
+  min-width: 180px;
+}
+
+.menu-toggle {
+  margin-right: 12px;
+  font-size: 20px;
+  color: #606266;
+  transition: all 0.3s;
+}
+
+.menu-toggle:hover {
+  color: #e83929;
+  transform: scale(1.1);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-icon {
+  font-size: 24px;
+}
+
+.logo-text {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  letter-spacing: 0.5px;
 }
 
 .search-container {
@@ -287,33 +333,89 @@ const openBlogEditor = () => {
   max-width: 600px;
 }
 
+.search-input {
+  border-radius: 20px;
+  transition: all 0.3s;
+}
+
+.search-input:focus-within {
+  box-shadow: 0 0 0 2px rgba(232, 57, 41, 0.2);
+}
+
+.search-button {
+  margin-left: 12px;
+  border-radius: 20px;
+  background-color: #e83929;
+  border: none;
+  padding: 10px 20px;
+  transition: all 0.3s;
+}
+
+.search-button:hover {
+  background-color: #d62c1e;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(232, 57, 41, 0.3);
+}
+
 .user-actions {
   display: flex;
   align-items: center;
-  gap: 15px;
-  min-width: 150px;
+  gap: 20px;
+  min-width: 180px;
   justify-content: flex-end;
+}
+
+.user-avatar {
+  cursor: pointer;
+  border-radius: 50%;
+  overflow: hidden;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.user-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.create-button {
+  background-color: #e83929;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s;
+}
+
+.create-button:hover {
+  background-color: #d62c1e;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(232, 57, 41, 0.3);
 }
 
 /* Main Container Styles */
 .main-container {
   display: flex;
-  min-height: calc(100vh - 60px);
-  margin-top: 60px; /* 为固定的header留出空间 */
+  min-height: calc(100vh - 64px);
+  margin-top: 64px; /* 为固定的header留出空间 */
 }
 
 /* Sidebar Styles - 固定不滚动 */
 .sidebar {
-  width: 200px;
+  width: 220px;
   background-color: #f7f8fa;
   border-right: 1px solid #eee;
-  transition: width 0.3s;
+  transition: all 0.3s ease;
   position: fixed;
-  top: 60px; /* 在header下方 */
+  top: 64px; /* 在header下方 */
   left: 0;
   bottom: 0;
   overflow-y: auto; /* 如果侧边栏内容过多，允许在侧边栏内部滚动 */
   z-index: 90;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.03);
 }
 
 .sidebar.collapsed {
@@ -323,32 +425,105 @@ const openBlogEditor = () => {
 .sidebar-menu {
   height: 100%;
   border-right: none;
+  padding-top: 12px;
+}
+
+.sidebar-menu :deep(.el-menu-item) {
+  height: 50px;
+  line-height: 50px;
+  margin: 4px 0;
+  border-radius: 0 24px 24px 0;
+  margin-right: 12px;
+}
+
+.sidebar-menu :deep(.el-menu-item.is-active) {
+  background-color: rgba(232, 57, 41, 0.1);
+  color: #e83929;
+  font-weight: 500;
+}
+
+.sidebar-menu :deep(.el-menu-item:hover) {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.sidebar-menu :deep(.el-sub-menu__title) {
+  height: 50px;
+  line-height: 50px;
+  margin: 4px 0;
+}
+
+.sidebar-menu :deep(.el-divider--horizontal) {
+  margin: 16px 0;
 }
 
 /* Content Styles - 可滚动 */
 .content {
   flex: 1;
-  padding: 20px;
+  padding: 24px;
   margin-left: 240px; /* 与sidebar宽度相同 */
-  transition: margin-left 0.3s;
+  margin-top:20px; /* 与header高度相同 */
+  transition: margin-left 0.3s ease;
   overflow-y: auto; /* 允许内容区域垂直滚动 */
-  min-height: calc(100vh - 60px);
+  min-height: calc(100vh - 64px);
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  margin-right: 24px;
+  margin-bottom: 24px;
 }
 
 .content-expanded {
   margin-left: 64px; /* 与折叠后的sidebar宽度相同 */
 }
 
-
-.news-image img {
-  width: 100%;
-  height: 120px;
-  object-fit: cover;
+/* Transitions */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
 }
 
-.project-logo img {
-  width: 60px;
-  height: 60px;
-  border-radius: 8px;
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 64px;
+  }
+
+  .content {
+    margin-left: 64px;
+    padding: 16px;
+    margin-right: 16px;
+    margin-bottom: 16px;
+  }
+
+  .search-container {
+    max-width: 300px;
+  }
+
+  .logo-text {
+    display: none;
+  }
+}
+
+@media (max-width: 576px) {
+  .header {
+    padding: 0 12px;
+  }
+
+  .search-container {
+    max-width: 200px;
+  }
+
+  .search-button {
+    padding: 8px 12px;
+  }
+
+  .create-button {
+    padding: 8px 12px;
+  }
 }
 </style>

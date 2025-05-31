@@ -7,6 +7,11 @@ import Community from '../views/Community.vue'
 import AccountSettings from '../views/AccountSettings.vue'
 import Follow from '../views/Follow.vue'
 import Collection from '../views/Collection.vue'
+import EnhancedBlogEditor from '../views/EnhancedBlogEditor.vue'
+import BlogDetail from '../views/BlogDetail.vue'
+import Test from '../views/Test.vue'
+import EnhancedCommunity from '../views/EnhancedCommunity.vue'
+import NotFound from '../views/404.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -17,9 +22,9 @@ const router = createRouter({
       component: Manager,
       redirect: '/login',
       children: [
-        { path: '/home', component: Home },
-        { path: '/blog', component: Blog },
-        { path: '/community', component: Community },
+        { path: '/home', component: EnhancedCommunity },
+        { path: '/blog', component: Community },
+        { path: '/community', component: EnhancedCommunity },
         { path: '/subscribe', component: Blog },
         { path: '/follow', component: Follow },
         { path: '/collect', component: Collection },
@@ -29,6 +34,10 @@ const router = createRouter({
         { path: '/manage/comments', component: Blog },
         { path: '/settings/profile', component: AccountSettings },
         { path: '/settings/website', component: Blog },
+        {
+          path: '/enhanced-community',
+          component: EnhancedCommunity,
+        },
       ]
     },
     {
@@ -38,7 +47,7 @@ const router = createRouter({
     {
       path: '/404',
       name: '404',
-      component: import('../views/404.vue')
+      component: NotFound,
     },
     {
       path: '/:pathMatch(.*)',
@@ -46,19 +55,15 @@ const router = createRouter({
     },
     {
       path: '/blog-editor',
-      component: import('../views/BlogEditor.vue')
-    },
-    {
-      path: '/enhanced-blog-editor',
-      component: import('../views/EnhancedBlogEditor.vue')
+      component: EnhancedBlogEditor
     },
     {
       path: '/blog-detail',
-      component: import('../views/BlogDetail.vue')
+      component: BlogDetail
     },
     {
       path: '/test',
-      component: import('../views/Test.vue')
+      component: Test
     }
   ],
 })
