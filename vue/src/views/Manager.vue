@@ -464,7 +464,7 @@ const openBlogEditor = () => {
   margin-top:20px; /* 与header高度相同 */
   transition: margin-left 0.3s ease;
   overflow-y: auto; /* 允许内容区域垂直滚动 */
-  min-height: calc(100vh - 64px);
+  min-height: calc(100vh - 108px);
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);

@@ -5,10 +5,7 @@ import com.yn.mapper.PostMapper;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class PostService {
@@ -40,6 +37,13 @@ public class PostService {
 
     public List<Post> getPostsByUserIds(List<Long> userIds) {
         return postMapper.selectPostsByUserIds(userIds);
+    }
+
+    public List<Post> getPostsByIds(List<Long> postIds) {
+        if (postIds == null || postIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return postMapper.selectPostsByIds(postIds);
     }
 
     public List<Post> getRelatedPosts(Long postId, int limit) {

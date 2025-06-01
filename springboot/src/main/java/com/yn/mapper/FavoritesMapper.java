@@ -18,4 +18,5 @@ public interface FavoritesMapper {
     int countByPostId(@Param("postId") Long postId);
     int countCollectionByCollectionId(@Param("collectionId") Long collectionId);
     FavoritesCollection selectCollectionById(@Param("collectionId") Long collectionId);
+    List<Long> selectPostIdsByCollectionId(@Param("collectionId") Long collectionId);
 }

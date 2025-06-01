@@ -38,4 +38,6 @@ public interface PostMapper {
     List<Post> selectPopularPosts(
             @Param("excludeId") Long excludeId,
             @Param("limit") int limit);
+
+    List<Post> selectPostsByIds(@Param("postIds") List<Long> postIds);
 }

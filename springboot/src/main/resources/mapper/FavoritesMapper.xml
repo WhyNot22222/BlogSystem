@@ -52,4 +52,9 @@
         SELECT * FROM favorites_collections
         WHERE id = #{collectionId}
     </select>
+
+    <select id="selectPostIdsByCollectionId" resultType="java.lang.Long">
+        SELECT post_id FROM favorites WHERE collection_id = #{collectionId}
+    </select>
+
 </mapper>

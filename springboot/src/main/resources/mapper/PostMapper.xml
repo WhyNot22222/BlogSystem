@@ -154,4 +154,11 @@
         LIMIT #{limit}
     </select>
 
+    <select id="selectPostsByIds" resultType="com.yn.entity.Post">
+        SELECT * FROM posts WHERE id IN
+        <foreach item="id" collection="postIds" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
 </mapper>

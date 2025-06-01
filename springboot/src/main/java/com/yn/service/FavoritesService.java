@@ -60,4 +60,8 @@ public class FavoritesService {
     public FavoritesCollection getCollectionById(Long collectionId) {
         return favoritesMapper.selectCollectionById(collectionId);
     }
+
+    public List<Long> getPostIdsByCollectionId(Long collectionId) {
+        return favoritesMapper.selectPostIdsByCollectionId(collectionId);
+    }
 }

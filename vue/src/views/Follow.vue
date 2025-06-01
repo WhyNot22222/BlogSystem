@@ -59,7 +59,6 @@
     <div class="following-list">
       <div class="following-header">
         <h2 class="section-title">我的关注 <span class="count">({{ followingUsers.length }})</span></h2>
-        <el-button type="primary" size="small" class="manage-btn">管理</el-button>
       </div>
 
       <div class="search-following">
@@ -713,11 +712,9 @@ onMounted(() => {
   border: none;
 }
 
-
 .recommended-user .user-info {
   flex: 1;
 }
-
 
 /* 确保两个区域独立滚动 */
 .post-feed, .following-list {

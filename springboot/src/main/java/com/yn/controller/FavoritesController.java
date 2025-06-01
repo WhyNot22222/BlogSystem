@@ -3,7 +3,9 @@ package com.yn.controller;
 import com.yn.common.Result;
 import com.yn.entity.Favorites;
 import com.yn.entity.FavoritesCollection;
+import com.yn.entity.Post;
 import com.yn.service.FavoritesService;
+import com.yn.service.PostService;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +16,8 @@ import java.util.List;
 public class FavoritesController {
     @Resource
     private FavoritesService favoritesService;
+    @Resource
+    private PostService postService;
 
     @PostMapping("/collection")
     public Result createCollection(
@@ -78,5 +82,16 @@ public class FavoritesController {
     public Result getCollectionItemCount(@RequestParam Long collectionId) {
         int count = favoritesService.countByCollectionId(collectionId);
         return Result.success(count);
+    }
+
+    @GetMapping("/collection/posts")
+    public Result getCollectionPosts(@RequestParam Long collectionId) {
+        // 1. 获取收藏夹中的帖子ID列表
+        List<Long> postIds = favoritesService.getPostIdsByCollectionId(collectionId);
+        
+        // 2. 通过PostService获取完整帖子数据
+        List<Post> posts = postService.getPostsByIds(postIds);
+        
+        return Result.success(posts);
     }
 }
