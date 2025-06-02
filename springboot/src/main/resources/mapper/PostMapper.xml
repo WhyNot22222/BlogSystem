@@ -161,4 +161,14 @@
         </foreach>
     </select>
 
+    <update id="incrementViews">
+        UPDATE posts
+        SET views = views + 1 
+        WHERE id = #{postId}
+    </update>
+
+    <select id="selectPostsByUserId" resultType="com.yn.entity.Post">
+        SELECT * FROM posts WHERE user_id = #{userId} ORDER BY created_at DESC
+    </select>
+
 </mapper>

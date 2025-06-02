@@ -85,51 +85,46 @@
           </el-menu-item>
 
           <el-menu-item index="4">
-            <el-icon><Connection /></el-icon>
-            <span>订阅</span>
-          </el-menu-item>
-
-          <el-menu-item index="5">
             <el-icon><Star /></el-icon>
             <span>关注</span>
           </el-menu-item>
 
-          <el-menu-item index="6">
+          <el-menu-item index="5">
             <el-icon><Collection /></el-icon>
             <span>收藏</span>
           </el-menu-item>
 
-          <el-menu-item index="7">
+          <el-menu-item index="6">
             <el-icon><Clock /></el-icon>
             <span>历史</span>
           </el-menu-item>
 
           <el-divider></el-divider>
 
-          <el-sub-menu index="8">
+          <el-sub-menu index="7">
             <template #title>
               <el-icon><Management /></el-icon>
               <span>数据管理</span>
             </template>
-            <el-menu-item index="8-1">文章管理</el-menu-item>
-            <el-menu-item index="8-2">用户管理</el-menu-item>
-            <el-menu-item index="8-3">评论管理</el-menu-item>
+            <el-menu-item index="7-1">文章管理</el-menu-item>
+            <el-menu-item index="7-2">用户管理</el-menu-item>
+            <el-menu-item index="7-3">评论管理</el-menu-item>
           </el-sub-menu>
 
-          <el-sub-menu index="9">
+          <el-sub-menu index="8">
             <template #title>
               <el-icon><Setting /></el-icon>
               <span>系统设置</span>
             </template>
-            <el-menu-item index="9-1">个人设置</el-menu-item>
-            <el-menu-item index="9-2">网站设置</el-menu-item>
+            <el-menu-item index="8-1">个人设置</el-menu-item>
+            <el-menu-item index="8-2">网站设置</el-menu-item>
           </el-sub-menu>
         </el-menu>
       </aside>
 
       <!-- Content Area - Scrollable -->
       <main class="content" :class="{ 'content-expanded': isCollapsed }">
-        <RouterView v-slot="{ Component }">
+        <RouterView v-slot="{ Component }" :key="$route.fullPath">
           <transition name="fade" mode="out-in">
             <component :is="Component" />
           </transition>
@@ -153,7 +148,6 @@ import {
   ChatDotRound,
   Management,
   Setting,
-  Connection,
   Star,
   Collection,
   Clock,
@@ -183,19 +177,19 @@ const toggleSidebar = () => {
 
 // 路由跳转逻辑
 const handleMenuSelect = (index) => {
+  store.commit('clearCurrentData')
   const routeMap = {
     '1': '/home',               // 首页
     '2': '/blog',               // 博客
     '3': '/community',          // 社区
-    '4': '/subscribe',          // 订阅
-    '5': '/follow',             // 关注
-    '6': '/collect',            // 收藏
-    '7': '/history',            // 历史
-    '8-1': '/manage/articles',  // 文章管理
-    '8-2': '/manage/users',     // 用户管理
-    '8-3': '/manage/comments',  // 评论管理
-    '9-1': '/settings/profile', // 个人设置
-    '9-2': '/settings/website'  // 网站设置
+    '4': '/follow',             // 关注
+    '5': '/collect',            // 收藏
+    '6': '/history',            // 历史
+    '7-1': '/manage/articles',  // 文章管理
+    '7-2': '/manage/users',     // 用户管理
+    '7-3': '/manage/comments',  // 评论管理
+    '8-1': '/settings/profile', // 个人设置
+    '8-2': '/settings/website'  // 网站设置
   }
   if (routeMap[index]) {
     router.push(routeMap[index])
@@ -260,7 +254,7 @@ const handleLogout = () => {
 
 const openBlogEditor = () => {
   // Open blog editor in a new tab
-  window.open('/enhanced-blog-editor', '_blank')
+  window.open('/blog-editor', '_blank')
 }
 </script>
 

@@ -12,4 +12,5 @@ public interface TagMapper {
     List<Tag> selectAll();
     Tag selectByName(String name);
     Tag selectById(Long id);
+    List<Tag> selectHotTags();
 }

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yn.mapper.FollowMapper">
+    <insert id="insert">
+        INSERT INTO follow(follower_id, followed_id)
+        VALUES(#{followerId}, #{followedId})
+    </insert>
+
+    <delete id="delete">
+        DELETE FROM follow
+        WHERE follower_id = #{followerId} 
+          AND followed_id = #{followedId}
+    </delete>
+
+    <select id="checkExists" resultType="int">
+        SELECT COUNT(*) 
+        FROM follow
+        WHERE follower_id = #{followerId} 
+          AND followed_id = #{followedId}
+    </select>
+
+    <select id="selectFollowedIds" resultType="java.lang.Long">
+        SELECT followed_id 
+        FROM follow
+        WHERE follower_id = #{followerId}
+    </select>
+
+</mapper>

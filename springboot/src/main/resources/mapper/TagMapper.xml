@@ -25,4 +25,12 @@
         SELECT id, name FROM tags WHERE id = #{id}
     </select>
 
+    <select id="selectHotTags" resultType="com.yn.entity.Tag">
+        SELECT t.id, t.name, COUNT(pt.post_id) as usage_count 
+        FROM tags t
+        LEFT JOIN post_tags pt ON t.id = pt.tag_id
+        GROUP BY t.id
+        ORDER BY usage_count DESC
+        LIMIT 10
+    </select>
 </mapper>

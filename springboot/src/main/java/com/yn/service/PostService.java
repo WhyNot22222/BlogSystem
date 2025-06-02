@@ -112,4 +112,12 @@ public class PostService {
 
         return distinctPosts;
     }
+
+    public void incrementViews(Long postId) {
+        postMapper.incrementViews(postId);
+    }
+
+    public List<Post> getPostsByUserId(Long userId) {
+        return postMapper.selectPostsByUserId(userId);
+    }
 }

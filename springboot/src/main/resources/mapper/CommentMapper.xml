@@ -6,7 +6,7 @@
 
     <insert id="insertComment" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO comments(post_id, parent_id, user_id, content, created_at)
-        VALUES(#{postId}, #{parentId}, #{userId}, #{content}, NOW())
+        VALUES(#{postId}, #{parentId}, #{userId}, #{content}, #{createdAt})
     </insert>
 
     <select id="selectByPostId" resultType="com.yn.entity.Comment">

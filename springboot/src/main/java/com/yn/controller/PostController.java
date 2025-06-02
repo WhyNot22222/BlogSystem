@@ -1,6 +1,5 @@
 package com.yn.controller;
 
-import com.github.pagehelper.Page;
 import com.yn.common.Result;
 import com.yn.entity.Post;
 import com.yn.service.PostService;
@@ -74,5 +73,19 @@ public class PostController {
             @RequestParam(defaultValue = "3") int limit) {
         List<Post> relatedPosts = postService.getRelatedPosts(id, limit);
         return Result.success(relatedPosts);
+    }
+
+    @PutMapping("/{postId}/views")
+    public Result incrementViews(@PathVariable Long postId) {
+        postService.incrementViews(postId);
+        return Result.success();
+    }
+
+    @GetMapping("/user-posts")
+    public Result getPostsByUser(@RequestParam Long userId) {
+        List<Post> posts = postService.getPostsByUserId(userId);
+        return !posts.isEmpty() ? 
+            Result.success(posts) : 
+            Result.error("该用户暂无文章");
     }
 }

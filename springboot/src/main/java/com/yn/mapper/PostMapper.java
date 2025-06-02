@@ -40,4 +40,8 @@ public interface PostMapper {
             @Param("limit") int limit);
 
     List<Post> selectPostsByIds(@Param("postIds") List<Long> postIds);
+
+    int incrementViews(@Param("postId") Long postId);
+
+    List<Post> selectPostsByUserId(@Param("userId") Long userId);
 }

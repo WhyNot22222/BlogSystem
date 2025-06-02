@@ -6,7 +6,10 @@ import com.yn.service.TagService;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/tags")
@@ -44,7 +47,7 @@ public class TagController {
         return Result.success(tags);
     }
 
-    @GetMapping("/search")
+    @GetMapping("/searchByName")
     public Result getTagByName(@RequestParam String name) {
         Tag tag = tagService.getTagByName(name);
         return tag != null ?
@@ -58,5 +61,18 @@ public class TagController {
         return tag!= null?
                 Result.success(tag) :
                 Result.error("标签不存在");
+    }
+
+    @GetMapping("/hot")
+    public Result getHotTags() {
+        List<Tag> hotTags = tagService.getHotTags();
+        return Result.success(hotTags.stream()
+            .map(tag -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", tag.getId());
+                map.put("name", tag.getName());
+                return map;
+            })
+            .collect(Collectors.toList()));
     }
 }

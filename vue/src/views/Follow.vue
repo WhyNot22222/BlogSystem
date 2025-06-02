@@ -14,7 +14,7 @@
               <div class="author-details">
                 <div class="author-name">{{ post.authorName }}</div>
                 <div class="post-meta">
-                  <span class="post-time">{{ post.publishedAt }}</span>
+                  <span class="post-time">{{ formatTime(post.publishedAt) }}</span>
                   <span class="post-category" v-if="post.category">{{ post.category }}</span>
                 </div>
               </div>
@@ -108,47 +108,12 @@
     </div>
 
     <!-- 帖子详情对话框 -->
-    <el-dialog
-        v-model="showPostDetail"
-        :title="currentPost?.title || '帖子详情'"
-        width="70%"
-        destroy-on-close
-        :append-to-body="true"
-        :lock-scroll="false"
-    >
-      <div v-if="currentPost" class="post-detail">
-        <div class="post-detail-header">
-          <div class="user-info">
-            <el-avatar :size="40" :src="currentPost.authorAvatar"></el-avatar>
-            <div class="user-details">
-              <div class="username">{{ currentPost.authorName }}</div>
-              <div class="post-time">{{ currentPost.postTime }}</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="post-detail-content">
-          {{ currentPost.content }}
-        </div>
-
-        <div v-if="currentPost.images?.length" class="post-detail-images">
-          <el-image
-              v-for="(image, index) in currentPost.images"
-              :key="index"
-              :src="image.url"
-              :preview-src-list="currentPost.images.map(img => img.url)"
-              fit="cover"
-              class="detail-image"
-          />
-        </div>
-
-        <div class="post-detail-tags">
-          <el-tag v-for="tag in currentPost.tags" :key="tag" size="small">
-            #{{ tag }}
-          </el-tag>
-        </div>
-      </div>
-    </el-dialog>
+    <BlogPreviewDialog
+      :visible="showPostDetail"
+      :post="currentPost"
+      title="动态详情"
+      @close="showPostDetail = false"
+    />
 
   </div>
 </template>
@@ -163,7 +128,11 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/utils/request'
 import { useStore } from "vuex";
 import defaultAvatar from '@/imgs/default.jpg'
+import defaultCover from '@/imgs/default-cover.jpg'
 import { getUserName, fetchUserAvatar } from '@/utils/userHelper';
+import BlogPreviewDialog from '@/components/BlogPreviewDialog.vue';
+import { formatTime } from '@/utils/dateUtils';
+import * as postHelper from "@/utils/postHelper.js";
 
 const store = useStore();
 const userId = computed(() => store.getters.userId)
@@ -175,13 +144,22 @@ const showPostDetail = ref(false);
 const currentPost = ref(null);
 
 const viewPostDetail = (post) => {
-  currentPost.value = post;
+  currentPost.value = {
+    id: post.id,
+    title: post.title,
+    formattedContent: post.formattedContent,
+    coverUrl: post.coverUrl,
+    author: {
+      name: post.authorName,
+      avatar: post.authorAvatar
+    },
+    createdAt: post.publishedAt,
+    category: post.category,
+    tags: post.tags,
+    content: post.content,
+    images: post.images?.map(img => ({ url: img })) || []
+  };
   showPostDetail.value = true;
-};
-
-// 添加时间格式化方法（如果尚未存在）
-const formatTime = (timestamp) => {
-  return dayjs(timestamp).format('YYYY-MM-DD HH:mm');
 };
 
 // 过滤关注用户列表
@@ -266,6 +244,7 @@ const fetchFollowedPosts = async () => {
             ...blog,
             authorName: await getUserName(blog.userId),
             authorAvatar: await fetchUserAvatar(blog.userId),
+            coverUrl: await postHelper.fetchCover(blog.userId, blog.id) || defaultCover,
             isNew: new Date().getTime() - new Date(blog.createdAt).getTime() < 86400000,
           }))
         );
@@ -715,6 +694,7 @@ onMounted(() => {
 .recommended-user .user-info {
   flex: 1;
 }
+
 
 /* 确保两个区域独立滚动 */
 .post-feed, .following-list {

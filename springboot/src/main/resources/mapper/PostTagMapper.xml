@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yn.mapper.PostTagMapper">
+    
+    <insert id="insert">
+        INSERT INTO post_tags(post_id, tag_id)
+        VALUES(#{postId}, #{tagId})
+        ON DUPLICATE KEY UPDATE post_id=post_id
+    </insert>
+
+    <delete id="deleteByPostId">
+        DELETE FROM post_tags WHERE post_id = #{postId}
+    </delete>
+
+    <delete id="deleteByTagId">
+        DELETE FROM post_tags WHERE tag_id = #{tagId}
+    </delete>
+
+    <select id="findTagsByPostId" resultType="java.lang.Long">
+        SELECT tag_id FROM post_tags
+        WHERE post_id = #{postId}
+    </select>
+
+    <select id="findPostsByTagId" resultType="java.lang.Long">
+        SELECT post_id FROM post_tags
+        WHERE tag_id = #{tagId}
+    </select>
+
+    <delete id="deleteByPostIdAndTagIds">
+        DELETE FROM post_tags 
+        WHERE post_id = #{postId}
+        AND tag_id IN
+        <foreach item="id" collection="tagIds" open="(" separator="," close=")">
+            #{id}
+    </foreach>
+</delete>
+
+</mapper>

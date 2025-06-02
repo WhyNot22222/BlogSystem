@@ -301,23 +301,7 @@ import { ref, nextTick, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/utils/request'
-import {
-  ArrowLeft,
-  ArrowDown,
-  Plus,
-  Picture,
-  Document,
-  Delete,
-  View,
-  Calendar,
-  Folder,
-  Setting,
-  User,
-  PriceTag,
-  Upload
-} from '@element-plus/icons-vue'
 import {useStore} from "vuex";
-import defaultAvatar from "@/imgs/default.jpg";
 
 const store = useStore();
 const userId = computed(() => store.getters.userId)
