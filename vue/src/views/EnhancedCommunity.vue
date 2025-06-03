@@ -774,7 +774,8 @@ const submitComment = async () => {
       userId: currentUser.id,
       content: newComment.value.trim(),
       parentId: isReply ? replyTarget.value.id : null,
-      replyTo: isReply ? replyTarget.value.userId : null
+      replyTo: isReply ? replyTarget.value.userId : null,
+      createdAt: new Date().toISOString()
     };
 
     const res = await request.post('/comment/add', commentData);

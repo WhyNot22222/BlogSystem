@@ -1,13 +1,16 @@
 package com.yn.service;
 
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.yn.entity.Comment;
 import com.yn.mapper.CommentMapper;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class CommentService {
@@ -38,5 +41,25 @@ public class CommentService {
 
         deleteIds.forEach(commentMapper::deleteById);
         return deleteIds.size(); // 返回删除的评论数量
+    }
+
+    public PageInfo<Comment> getUserComments(Long userId, String keyword, String status, String startTime, String endTime, Integer page, Integer pageSize) {
+        PageHelper.startPage(page, pageSize);
+        Map<String, Object> params = new HashMap<>();
+        params.put("userId", userId);
+        params.put("keyword", keyword);
+        params.put("status", status);
+        params.put("startTime", startTime);
+        params.put("endTime", endTime);
+        List<Comment> comments = commentMapper.selectByCondition(params);
+        return new PageInfo<>(comments);
+    }
+
+    public int auditComment(Long id, String status) {
+        Comment comment = commentMapper.findById(id);
+        if (comment == null) {
+            throw new RuntimeException("评论不存在");
+        }
+        return commentMapper.updateStatus(id, status);
     }
 }

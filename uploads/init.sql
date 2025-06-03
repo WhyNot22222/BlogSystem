@@ -160,7 +160,7 @@ CREATE TABLE IF NOT EXISTS comments (
     user_id BIGINT COMMENT '用户ID',
     content TEXT NOT NULL COMMENT '评论内容',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    status ENUM('pending', 'approved') DEFAULT 'pending' COMMENT '评论状态',
+    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending' COMMENT '评论状态',
     FOREIGN KEY (post_id) REFERENCES posts(id),
     FOREIGN KEY (parent_id) REFERENCES comments(id),
     FOREIGN KEY (user_id) REFERENCES user(id)

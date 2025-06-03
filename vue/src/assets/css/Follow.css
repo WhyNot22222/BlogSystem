@@ -1,0 +1,527 @@
+
+.follow-container {
+    display: flex;
+    gap: 24px;
+    height: 100%;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* 左侧博客列表样式 */
+.post-feed {
+    flex: 1;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    height: calc(100vh - 100px);
+    overflow-y: auto;
+}
+
+.feed-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    background-color: #fff;
+    z-index: 10;
+    border-radius: 12px 12px 0 0;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+.count {
+    font-size: 14px;
+    color: #999;
+    margin-left: 5px;
+    font-weight: normal;
+}
+
+.post-list {
+    padding: 0 24px 24px;
+}
+
+.post-card {
+    padding: 24px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.post-card:last-child {
+    border-bottom: none;
+}
+
+.post-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.author-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.author-avatar {
+    border: 2px solid #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.author-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.author-name {
+    font-weight: 600;
+    font-size: 15px;
+    color: #333;
+}
+
+.post-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 2px;
+}
+
+.post-time {
+    font-size: 13px;
+    color: #999;
+}
+
+.post-category {
+    font-size: 12px;
+    color: #e83929;
+    background-color: #fff2f0;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.new-post-badge {
+    font-size: 12px;
+    color: #fff;
+    background-color: #e83929;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.post-content {
+    margin-bottom: 16px;
+    cursor: pointer;
+}
+
+.post-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #333;
+    line-height: 1.4;
+}
+
+.post-summary {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 16px;
+    line-height: 1.6;
+}
+
+.post-image {
+    width: 100%;
+    margin-top: 12px;
+    border-radius: 10px;
+    overflow: hidden;
+    max-height: 240px;
+}
+
+.post-image.wide-image {
+    max-height: 300px;
+}
+
+.post-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.post-content:hover .post-image img {
+    transform: scale(1.02);
+}
+
+.post-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+}
+
+.post-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.post-tag {
+    font-size: 13px;
+    color: #666;
+    background-color: #f5f5f5;
+    padding: 4px 10px;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.post-tag:hover {
+    background-color: #eee;
+    color: #333;
+}
+
+.blog-actions {
+    display: flex;
+    gap: 20px;
+}
+
+.action-button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: #666;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 16px;
+    transition: all 0.2s;
+}
+
+.action-button:hover {
+    color: #e83929;
+    background-color: #fff2f0;
+}
+
+.action-button.active {
+    color: #e83929;
+}
+
+.load-more {
+    display: flex;
+    justify-content: center;
+    margin-top: 24px;
+}
+
+/* 右侧关注列表样式 */
+.following-list {
+    width: 320px;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    height: calc(100vh - 100px);
+    overflow-y: auto;
+}
+
+.following-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    background-color: #fff;
+    z-index: 10;
+    border-radius: 12px 12px 0 0;
+}
+
+.manage-btn {
+    font-size: 13px;
+    height: 32px;
+    padding: 0 12px;
+    background-color: #e83929;
+    border: none;
+}
+
+.search-following {
+    padding: 16px 24px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+
+.users-list {
+    padding: 16px 24px;
+}
+
+.user-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.user-item:hover {
+    background-color: #f9f9f9;
+}
+
+.user-item:last-child {
+    border-bottom: none;
+}
+
+.user-info {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex: 1;
+    max-width: calc(100% - 80px);
+}
+
+.user-avatar {
+    border: 2px solid #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: 100%;
+}
+
+.user-name-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.user-name {
+    font-weight: 600;
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #333;
+}
+
+.verified-badge {
+    color: #fff;
+    background-color: #1da1f2;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.verified-badge .el-icon {
+    font-size: 10px;
+}
+
+.user-bio {
+    font-size: 13px;
+    color: #999;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+}
+
+/* 添加按钮容器修复对齐问题 */
+.follow-button-container {
+    width: 80px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.follow-button-container .el-button {
+    width: 100%;
+    padding: 0;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.following-btn {
+    background-color: #f5f5f5;
+    color: #666;
+    border: 1px solid #ddd;
+}
+
+.empty-state {
+    padding: 40px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.empty-icon {
+    width: 60px;
+    height: 60px;
+    opacity: 0.5;
+}
+
+.discover-btn {
+    margin-top: 16px;
+    background-color: #e83929;
+    border: none;
+}
+
+.recommended-user .user-info {
+    flex: 1;
+}
+
+/* 确保两个区域独立滚动 */
+.post-feed, .following-list {
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.post-feed::-webkit-scrollbar, .following-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.post-feed::-webkit-scrollbar-thumb, .following-list::-webkit-scrollbar-thumb {
+    background-color: #ddd;
+    border-radius: 3px;
+}
+
+.post-feed::-webkit-scrollbar-track, .following-list::-webkit-scrollbar-track {
+    background-color: #f5f5f5;
+}
+
+/* 帖子详情对话框样式 */
+.post-detail {
+    padding: 20px;
+}
+
+.post-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-details {
+    line-height: 1.4;
+}
+
+.username {
+    font-weight: 600;
+    font-size: 16px;
+    color: #333;
+}
+
+.post-time {
+    font-size: 13px;
+    color: #999;
+}
+
+.post-detail-content {
+    font-size: 15px;
+    line-height: 1.8;
+    color: #444;
+    margin-bottom: 24px;
+    white-space: pre-wrap;
+}
+
+.post-detail-images {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.detail-image {
+    width: 100%;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.detail-image:hover {
+    transform: scale(1.02);
+}
+
+.post-detail-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* 添加动画效果 */
+.el-dialog {
+    transition: all 0.3s ease-out;
+}
+
+/* 调整对话框标题样式 */
+:deep(.el-dialog__header) {
+    padding: 20px;
+    border-bottom: 1px solid #f0f0f0;
+    margin-right: 0;
+}
+
+:deep(.el-dialog__title) {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+    .follow-container {
+        flex-direction: column;
+    }
+
+    .following-list {
+        width: 100%;
+        height: auto;
+        max-height: 500px;
+    }
+
+    .post-feed {
+        height: auto;
+        max-height: calc(100vh - 600px);
+    }
+}
+
+@media (max-width: 768px) {
+    .blog-actions {
+        gap: 12px;
+    }
+
+    .action-button {
+        font-size: 13px;
+    }
+
+    .post-title {
+        font-size: 16px;
+    }
+
+    .follow-button-container {
+        width: 70px;
+    }
+}

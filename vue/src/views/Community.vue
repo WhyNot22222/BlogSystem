@@ -551,7 +551,8 @@ const submitComment = async () => {
     const res = await request.post('/comment/add', {
       postId: commentPost.value.id,
       userId: currentUser.id,
-      content: newComment.value.trim()
+      content: newComment.value.trim(),
+      createdAt: new Date().toISOString()
     });
 
     if (res.code === '200') {
