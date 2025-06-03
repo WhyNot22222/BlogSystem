@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS user (
     username VARCHAR(50) NOT NULL UNIQUE COMMENT '用户名',
     email VARCHAR(100) NOT NULL UNIQUE COMMENT '邮箱',
     password VARCHAR(100) NOT NULL COMMENT '密码',
+    role ENUM('admin','user') NOT NULL DEFAULT 'user' COMMENT '角色',
     avatar VARCHAR(255) COMMENT '用户头像URL',
     bio TEXT COMMENT '个人简介',
     phone VARCHAR(20) COMMENT '手机号码'
@@ -193,22 +194,6 @@ CREATE TABLE IF NOT EXISTS comment_likes (
     FOREIGN KEY (comment_id) REFERENCES comments(id),
     FOREIGN KEY (user_id) REFERENCES user(id)
 );
-
--- 角色表
-CREATE TABLE IF NOT EXISTS roles (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '角色ID',
-    name VARCHAR(50) NOT NULL UNIQUE COMMENT '角色名称'
-);
-
--- 用户-角色连接表
-CREATE TABLE IF NOT EXISTS user_roles (
-    user_id BIGINT NOT NULL COMMENT '用户ID',
-    role_id BIGINT NOT NULL COMMENT '角色ID',
-    PRIMARY KEY (user_id, role_id),
-    FOREIGN KEY (user_id) REFERENCES user(id),
-    FOREIGN KEY (role_id) REFERENCES roles(id)
-);
-
 
 -- 收藏夹表
 CREATE TABLE IF NOT EXISTS favorites_collections (

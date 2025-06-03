@@ -21,9 +21,12 @@ public class UserController {
     }
 
     @GetMapping("/selectPage")
-    public Result selectPage(@RequestParam(defaultValue = "1") Integer pageNum,
-                            @RequestParam(defaultValue = "10") Integer pageSize) {
-        PageInfo<User> pageInfo = userService.selectPage(pageNum, pageSize);
+    public Result selectPage(
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String role) {
+        PageInfo<User> pageInfo = userService.selectPage(pageNum, pageSize, keyword, role);
         return Result.success(pageInfo);
     }
 
@@ -95,6 +98,16 @@ public class UserController {
             return Result.success(user);
         } else {
             return Result.error("用户不存在");
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public Result deleteUser(@PathVariable Long id) {
+        try {
+            userService.deleteUser(id);
+            return Result.success("用户删除成功");
+        } catch (RuntimeException e) {
+            return Result.error(e.getMessage());
         }
     }
 }

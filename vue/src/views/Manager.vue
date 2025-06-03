@@ -94,30 +94,25 @@
             <span>收藏</span>
           </el-menu-item>
 
-          <el-menu-item index="6">
-            <el-icon><Clock /></el-icon>
-            <span>历史</span>
-          </el-menu-item>
-
           <el-divider></el-divider>
 
-          <el-sub-menu index="7">
+          <el-sub-menu index="6">
             <template #title>
               <el-icon><Management /></el-icon>
               <span>数据管理</span>
             </template>
-            <el-menu-item index="7-1">文章管理</el-menu-item>
-            <el-menu-item index="7-2">用户管理</el-menu-item>
-            <el-menu-item index="7-3">评论管理</el-menu-item>
+            <el-menu-item index="6-1">文章管理</el-menu-item>
+            <el-menu-item index="6-2">用户管理</el-menu-item>
+            <el-menu-item index="6-3">评论管理</el-menu-item>
           </el-sub-menu>
 
-          <el-sub-menu index="8">
+          <el-sub-menu index="7">
             <template #title>
               <el-icon><Setting /></el-icon>
               <span>系统设置</span>
             </template>
-            <el-menu-item index="8-1">个人设置</el-menu-item>
-            <el-menu-item index="8-2">网站设置</el-menu-item>
+            <el-menu-item index="7-1">个人设置</el-menu-item>
+            <el-menu-item index="7-2">网站设置</el-menu-item>
           </el-sub-menu>
         </el-menu>
       </aside>
@@ -184,12 +179,11 @@ const handleMenuSelect = (index) => {
     '3': '/community',          // 社区
     '4': '/follow',             // 关注
     '5': '/collect',            // 收藏
-    '6': '/history',            // 历史
-    '7-1': '/manage/articles',  // 文章管理
-    '7-2': '/manage/users',     // 用户管理
-    '7-3': '/manage/comments',  // 评论管理
-    '8-1': '/settings/profile', // 个人设置
-    '8-2': '/settings/website'  // 网站设置
+    '6-1': '/manage/articles',  // 文章管理
+    '6-2': '/manage/users',     // 用户管理
+    '6-3': '/manage/comments',  // 评论管理
+    '7-1': '/settings/profile', // 个人设置
+    '7-2': '/settings/website'  // 网站设置
   }
   if (routeMap[index]) {
     router.push(routeMap[index])
@@ -467,7 +461,7 @@ const openBlogEditor = () => {
 }
 
 .content-expanded {
-  margin-left: 64px; /* 与折叠后的sidebar宽度相同 */
+  margin-left: 84px; /* 与折叠后的sidebar宽度相同 */
 }
 
 /* Transitions */

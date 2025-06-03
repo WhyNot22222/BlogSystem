@@ -21,8 +21,8 @@
     </select>
 
     <insert id="insertUser" parameterType="com.yn.entity.User" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO user (username, email, password) 
-        VALUES (#{username}, #{email}, #{password})
+        INSERT INTO user (username, email, password, role) 
+        VALUES (#{username}, #{email}, #{password}, #{role})
         ON DUPLICATE KEY UPDATE 
             username = VALUES(username) <!-- 触发唯一约束异常 -->
     </insert>
@@ -30,6 +30,9 @@
     <update id="updateUser" parameterType="com.yn.entity.User">
         UPDATE user
         SET username = #{username},
+            <if test="role != null">
+                role = #{role},
+            </if>
             avatar = #{avatar},
             bio = #{bio},
             phone = #{phone}
@@ -47,5 +50,23 @@
         SET email = #{newEmail}
         WHERE id = #{userId}
     </update>
+
+    <delete id="deleteById">
+        DELETE FROM user WHERE id = #{userId}
+    </delete>
+
+    <select id="selectByCondition" resultType="com.yn.entity.User">
+        SELECT * FROM user
+        <where>
+            <if test="keyword != null">
+                (username LIKE CONCAT('%', #{keyword}, '%')
+                OR email LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="role != null">
+                AND role = #{role}
+            </if>
+        </where>
+        ORDER BY id
+    </select>
 
 </mapper>

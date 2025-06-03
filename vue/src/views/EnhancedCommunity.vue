@@ -681,54 +681,6 @@ const toggleLike = async (post) => {
   }
 };
 
-// const submitComment = async () => {
-//   if (!newComment.value.trim()) {
-//     ElMessage.warning('请输入评论内容');
-//     return;
-//   }
-//
-//   commentSubmitting.value = true;
-//
-//   try {
-//     const res = await request.post('/comment/add', {
-//       postId: commentPost.value.id,
-//       userId: currentUser.id,
-//       content: newComment.value.trim()
-//     });
-//
-//     if (res.code === '200') {
-//       const newCommentObj = {
-//         ...res.data,
-//         author: {
-//           name: currentUser.username,
-//           avatar: currentUser.avatar
-//         },
-//         likes: 0,
-//         isLiked: false
-//       };
-//
-//       // 更新当前帖子评论列表
-//       commentPost.value.comments.unshift(newCommentObj);
-//
-//       // 同步到主帖子列表
-//       const originalPost = posts.value.find(p => p.id === commentPost.value.id);
-//       if (originalPost) {
-//         originalPost.comments.unshift(newCommentObj);
-//       }
-//
-//       newComment.value = '';
-//       ElMessage.success('评论成功');
-//     } else {
-//       ElMessage.error(`评论失败：${res.msg}`);
-//     }
-//   } catch (error) {
-//     console.error('评论提交失败:', error);
-//     ElMessage.error(`请求异常：${error.message}`);
-//   } finally {
-//     commentSubmitting.value = false;
-//   }
-// };
-
 // 方法 - 点赞评论
 const toggleCommentLike = (comment) => {
   comment.isLiked = !comment.isLiked;
@@ -894,22 +846,35 @@ const fetchComments = async (postId) => {
     });
 
     if (res.code === '200') {
-      // 将平铺的评论列表转换为嵌套结构
-      const comments = res.data.filter(comment => !comment.parentId);
-      const replies = res.data.filter(comment => comment.parentId);
+      // 创建评论映射和父评论数组
+      const commentMap = new Map();
+      const parentComments = [];
+      const repliesMap = new Map();
 
-      // 将回复关联到父评论
-      comments.forEach(comment => {
-        comment.replies = replies
-            .filter(reply => reply.parentId === comment.id)
-            .map(reply => {
-              // 查找回复的回复
-              reply.replies = replies.filter(r => r.parentId === reply.id);
-              return reply;
-            });
+      // 首先处理所有评论，建立映射
+      res.data.forEach(comment => {
+        commentMap.set(comment.id, comment);
+        // 初始化回复数组
+        comment.replies = [];
+
+        if (comment.parentId === null) {
+          parentComments.push(comment);
+        }
       });
 
-      return comments;
+      // 将回复关联到父评论
+      res.data.forEach(comment => {
+        if (comment.parentId !== null) {
+          const parentComment = commentMap.get(comment.parentId);
+          if (parentComment) {
+            // 设置回复目标作者信息
+            comment.replyToAuthor = parentComment.author;
+            parentComment.replies.push(comment);
+          }
+        }
+      });
+
+      return parentComments;
     }
   } catch (error) {
     console.error('获取评论失败:', error);

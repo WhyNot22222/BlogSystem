@@ -24,9 +24,9 @@ public class UserService {
         return userMapper.selectAll();
     }
 
-    public PageInfo<User> selectPage(Integer pageNum, Integer pageSize) {
+    public PageInfo<User> selectPage(int pageNum, int pageSize, String keyword, String role) {
         PageHelper.startPage(pageNum, pageSize);
-        List<User> userList = userMapper.selectAll();
+        List<User> userList = userMapper.selectByCondition(keyword, role);
         return PageInfo.of(userList);
     }
 
@@ -39,6 +39,7 @@ public class UserService {
         }
         
         try {
+            user.setRole("user"); // 设置默认角色为普通用户
             userMapper.insertUser(user);
             
             FavoritesCollection defaultCollection = new FavoritesCollection();
@@ -106,5 +107,13 @@ public class UserService {
 
     public User findById(Long userId) {
         return userMapper.findById(userId);
+    }
+
+    public void deleteUser(Long userId) {
+        User user = userMapper.findById(userId);
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
+        userMapper.deleteById(userId);
     }
 }

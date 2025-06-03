@@ -173,7 +173,7 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column prop="articleTitle" label="所属文章" width="200">
+          <el-table-column prop="articleTitle" label="所属文章" width="250">
             <template #default="{ row }">
               <router-link
                   :to="{ path: '/blog-detail', query: { postId: row.postId } }"

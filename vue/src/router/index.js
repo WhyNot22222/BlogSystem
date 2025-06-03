@@ -14,6 +14,7 @@ import EnhancedCommunity from '../views/EnhancedCommunity.vue'
 import NotFound from '../views/404.vue'
 import BlogManager from '../views/BlogManager.vue'
 import CommentManager from '../views/CommentManager.vue'
+import UserManager from '../views/UserManager.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -29,9 +30,8 @@ const router = createRouter({
         { path: '/community', component: EnhancedCommunity },
         { path: '/follow', component: Follow },
         { path: '/collect', component: Collection },
-        { path: '/history', component: Blog },
         { path: '/manage/articles', component: BlogManager },
-        { path: '/manage/users', component: Collection },
+        { path: '/manage/users', component: UserManager },
         { path: '/manage/comments', component: CommentManager },
         { path: '/settings/profile', component: AccountSettings },
         { path: '/settings/website', component: Follow },
