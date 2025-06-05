@@ -1,5 +1,5 @@
 <template>
-  <div class="blog-manager">
+  <div v-if="hasPermission" class="blog-manager">
     <!-- 页面头部 -->
     <div class="page-header">
       <div class="header-content">
@@ -166,6 +166,18 @@
         @close="previewVisible = false"
     />
   </div>
+
+  <div v-else class="permission-error">
+    <el-result
+        icon="error"
+        title="权限不足"
+        sub-title="您没有权限访问用户管理页面"
+    >
+      <template #extra>
+        <el-button type="primary" @click="goHome">返回首页</el-button>
+      </template>
+    </el-result>
+  </div>
 </template>
 
 <script setup>
@@ -200,6 +212,7 @@ const blogs = ref([])
 const loading = ref(false)
 const searchKeyword = ref('')
 const statusFilter = ref('')
+const hasPermission = ref(false)
 
 // 统计数据
 const publishedCount = computed(() =>
@@ -296,7 +309,13 @@ const handleFilter = () => {
   // 筛选逻辑已在计算属性中处理
 }
 
-onMounted(fetchBlogs)
+onMounted(async () => {
+  const hasAdminPermission = await userHelper.checkPermission(userId.value, 'admin')
+  if (hasAdminPermission) {
+    hasPermission.value = true
+    await fetchBlogs();
+  }
+})
 
 const previewVisible = ref(false)
 const currentPost = ref(null)
@@ -326,6 +345,14 @@ const showPreview = (post) => {
   padding: 24px;
   background: #f5f7fa;
   min-height: 100vh;
+}
+
+.permission-error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f5f7fa;
 }
 
 /* 页面头部 */

@@ -110,4 +110,14 @@ public class UserController {
             return Result.error(e.getMessage());
         }
     }
+
+    @GetMapping("/auth/check-permission")
+    public Result checkPermission(@RequestParam Long userId, @RequestParam String requiredRole) {
+        try {
+            boolean hasPermission = userService.checkPermission(userId, requiredRole);
+            return Result.success(hasPermission);
+        } catch (RuntimeException e) {
+            return Result.error(e.getMessage());
+        }
+    }
 }

@@ -116,4 +116,12 @@ public class UserService {
         }
         userMapper.deleteById(userId);
     }
+
+    public boolean checkPermission(Long userId, String requiredRole) {
+        User user = userMapper.findById(userId);
+        if (user == null) {
+            return false;
+        }
+        return user.getRole().equals(requiredRole);
+    }
 }

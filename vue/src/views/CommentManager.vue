@@ -1,5 +1,5 @@
 <template>
-  <div class="comment-management">
+  <div v-if="hasPermission" class="comment-management">
     <!-- 页面标题 -->
     <div class="page-header">
       <div class="header-content">
@@ -335,6 +335,18 @@
       </template>
     </el-dialog>
   </div>
+
+  <div v-else class="permission-error">
+    <el-result
+        icon="error"
+        title="权限不足"
+        sub-title="您没有权限访问评论管理页面"
+    >
+      <template #extra>
+        <el-button type="primary" @click="goHome">返回首页</el-button>
+      </template>
+    </el-result>
+  </div>
 </template>
 
 <script setup>
@@ -364,6 +376,7 @@ import {
   CornerDownRight,
   Send
 } from 'lucide-vue-next';
+import { checkPermission } from "@/utils/userHelper.js";
 
 const store = useStore();
 const userId = computed(() => store.getters.userId);
@@ -375,6 +388,10 @@ const searchParams = ref({
   dateRange: []
 });
 
+const goHome = () => {
+  router.push('/home')
+}
+
 // 评论数据
 const comments = ref([]);
 const selectedComments = ref([]);
@@ -382,6 +399,7 @@ const loading = ref(false);
 const total = ref(0);
 const currentPage = ref(1);
 const pageSize = ref(10);
+const hasPermission = ref(false);
 
 // 回复对话框
 const replyDialogVisible = ref(false);
@@ -649,8 +667,11 @@ const getEmptyStateMessage = () => {
 };
 
 // 初始化加载
-onMounted(() => {
-  loadComments();
+onMounted(async () => {
+  hasPermission.value = await checkPermission(userId.value, 'admin');
+  if (hasPermission.value) {
+    loadComments();
+  }
 });
 </script>
 

@@ -19,4 +19,8 @@ public interface FavoritesMapper {
     int countCollectionByCollectionId(@Param("collectionId") Long collectionId);
     FavoritesCollection selectCollectionById(@Param("collectionId") Long collectionId);
     List<Long> selectPostIdsByCollectionId(@Param("collectionId") Long collectionId);
+    void updateCollectionName(@Param("collectionId") Long collectionId, 
+                             @Param("newName") String newName);
+    int deleteCollection(@Param("collectionId") Long collectionId, 
+                    @Param("userId") Long userId);
 }

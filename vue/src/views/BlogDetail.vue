@@ -175,9 +175,9 @@
                 </svg>
                 {{ comment.likes }}
               </button>
-              <button class="comment-action-btn" @click="replyToComment(comment.id)">
-                回复
-              </button>
+<!--              <button class="comment-action-btn" @click="replyToComment(comment.id)">-->
+<!--                回复-->
+<!--              </button>-->
             </div>
             <hr>
           </div>
@@ -636,6 +636,7 @@ onMounted(async () => {
 
     categories.value = await postHelper.fetchCategories(categories)
     await fetchBlogDetail(postId)
+    await request.put(`/posts/${postId}/views`)
   } catch (error) {
     console.error('加载博客失败:', error)
     ElMessage.error('文章加载失败: ' + error.message)

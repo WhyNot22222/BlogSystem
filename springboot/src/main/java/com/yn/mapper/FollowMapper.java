@@ -1,10 +1,12 @@
 package com.yn.mapper;
 
 import com.yn.entity.Follow;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
+@Mapper
 public interface FollowMapper {
     int insert(Follow follow);
     int delete(@Param("followerId") Long followerId,

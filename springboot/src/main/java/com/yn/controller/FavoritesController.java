@@ -94,4 +94,24 @@ public class FavoritesController {
         
         return Result.success(posts);
     }
+
+    @PutMapping("/collection/rename")
+    public Result renameCollection(
+            @RequestParam Long id,
+            @RequestParam String name) {
+        boolean success = favoritesService.renameCollection(id, name);
+        return success ? 
+            Result.success("重命名成功") : 
+            Result.error("操作失败");
+    }
+
+    @DeleteMapping("/collection/delete")
+    public Result deleteCollection(
+            @RequestParam Long collectionId,
+            @RequestParam Long userId) {
+        boolean success = favoritesService.deleteCollection(collectionId, userId);
+        return success ? 
+            Result.success("删除成功") : 
+            Result.error("删除失败，收藏夹不存在或无权操作");
+    }
 }

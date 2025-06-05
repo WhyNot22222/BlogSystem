@@ -57,4 +57,15 @@
         SELECT post_id FROM favorites WHERE collection_id = #{collectionId}
     </select>
 
+    <update id="updateCollectionName">
+        UPDATE favorites_collections
+        SET name = #{newName}
+        WHERE id = #{collectionId}
+    </update>
+
+    <delete id="deleteCollection">
+        DELETE FROM favorites_collections
+        WHERE id = #{collectionId}
+        AND user_id = #{userId}
+    </delete>
 </mapper>

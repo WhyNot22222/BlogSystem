@@ -2371,13 +2371,14 @@ const createFolder = async () => {
 }
 
 .privacy-text {
-  flex: 1;
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
 }
 
 .privacy-title {
   font-weight: 600;
   color: #2c3e50;
-  margin-bottom: 4px;
 }
 
 .privacy-desc {

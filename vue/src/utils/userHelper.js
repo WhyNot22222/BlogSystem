@@ -65,3 +65,25 @@ export const fetchCurrentUserDetails = async (currentUser) => {
     return currentUser;
   }
 };
+
+export const checkPermission = async (userId, requiredRole) => {
+  try {
+    const response = await request.get('/user/auth/check-permission', {
+      params: {
+        userId: userId,
+        requiredRole: requiredRole
+      }
+    })
+
+    if (response.code === '200') {
+      return true
+    } else {
+      ElMessage.error('权限验证失败: ' + (response.msg || '您不是管理员'))
+      return false
+    }
+  } catch (error) {
+    console.log('权限验证失败:', error)
+    ElMessage.error('权限验证失败，请重试')
+    return false
+  }
+}
