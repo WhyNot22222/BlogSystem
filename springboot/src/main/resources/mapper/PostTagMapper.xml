@@ -34,7 +34,7 @@
         AND tag_id IN
         <foreach item="id" collection="tagIds" open="(" separator="," close=")">
             #{id}
-    </foreach>
-</delete>
+        </foreach>
+    </delete>
 
 </mapper>

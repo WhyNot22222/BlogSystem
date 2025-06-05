@@ -696,7 +696,7 @@ const fetchAndProcessPosts = async () => {
               const isLikedRes = await request.get(`/likes/check`, {
                 params: {
                   postId: postData.id,
-                  userId: postData.userId,
+                  userId: userId.value,
                 }
               })
               if (isLikedRes.code === '200') {

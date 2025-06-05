@@ -1,4 +1,3 @@
-// UserService.java
 package com.yn.service;
 
 import com.github.pagehelper.PageHelper;
@@ -6,9 +5,11 @@ import com.github.pagehelper.PageInfo;
 import com.yn.entity.FavoritesCollection;
 import com.yn.entity.User;
 import com.yn.mapper.UserMapper;
-import jakarta.annotation.Resource;
+import com.yn.event.UserRegisteredEvent;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import jakarta.annotation.Resource;
 
 import java.util.List;
 
@@ -18,7 +19,7 @@ public class UserService {
     UserMapper userMapper;
 
     @Resource
-    private FavoritesService favoritesService;
+    private EventPublisherService eventPublisherService;
 
     public List<User> selectAll() {
         return userMapper.selectAll();
@@ -30,6 +31,7 @@ public class UserService {
         return PageInfo.of(userList);
     }
 
+    @Transactional
     public void register(User user) {
         if (userMapper.findByUsername(user.getUsername()) != null) {
             throw new RuntimeException("用户名已被注册");
@@ -37,16 +39,13 @@ public class UserService {
         if (userMapper.findByEmail(user.getEmail()) != null) {
             throw new RuntimeException("邮箱已被注册");
         }
-        
+
         try {
-            user.setRole("user"); // 设置默认角色为普通用户
+            user.setRole("user");
             userMapper.insertUser(user);
-            
-            FavoritesCollection defaultCollection = new FavoritesCollection();
-            defaultCollection.setUserId(user.getId());
-            defaultCollection.setName("默认收藏夹");
-            favoritesService.createCollection(defaultCollection);
-            
+
+            eventPublisherService.publishUserRegisteredEvent(user);
+
         } catch (DataIntegrityViolationException e) {
             if (e.getMessage().contains("uk_username")) {
                 throw new RuntimeException("用户名已被注册");
@@ -67,17 +66,17 @@ public class UserService {
 
     public void updateProfile(User user) {
         User originalUser = userMapper.findById(user.getId());
-        
-        if (!originalUser.getUsername().equals(user.getUsername()) && 
-            userMapper.findByUsername(user.getUsername()) != null) {
+
+        if (!originalUser.getUsername().equals(user.getUsername()) &&
+                userMapper.findByUsername(user.getUsername()) != null) {
             throw new RuntimeException("用户名已被使用");
         }
-        
-        if (!originalUser.getEmail().equals(user.getEmail()) && 
-            userMapper.findByEmail(user.getEmail()) != null) {
+
+        if (!originalUser.getEmail().equals(user.getEmail()) &&
+                userMapper.findByEmail(user.getEmail()) != null) {
             throw new RuntimeException("邮箱已被注册");
         }
-        
+
         try {
             userMapper.updateUser(user);
         } catch (DataIntegrityViolationException e) {
