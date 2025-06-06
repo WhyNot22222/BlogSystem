@@ -6,8 +6,9 @@ export default createStore({
       id: null,
       username: '',
       email: '',
-      avatar: ''
-    }
+      avatar: '',
+    },
+    searchQuery: '',
   },
   mutations: {
     SET_USER(state, payload) {
@@ -20,7 +21,10 @@ export default createStore({
         email: '',
         avatar: ''
       }
-    }
+    },
+    SET_SEARCH_QUERY(state, query) {
+      state.searchQuery = query
+    },
   },
   actions: {
     // 初始化用户状态

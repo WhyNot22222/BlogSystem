@@ -138,6 +138,20 @@ INSERT INTO posts (title, content, formatted_content, views, summary, status, us
     NOW()
     );
 
+DELIMITER //
+
+CREATE TRIGGER delete_post_related_data
+    AFTER DELETE ON posts
+    FOR EACH ROW
+BEGIN
+    DELETE FROM post_tags WHERE post_id = OLD.id;
+    DELETE FROM post_likes WHERE post_id = OLD.id;
+    DELETE FROM comments WHERE post_id = OLD.id;
+    DELETE FROM comment_likes WHERE comment_id IN (SELECT id FROM comments WHERE post_id = OLD.id);
+END //
+
+DELIMITER ;
+
 -- 标签表
 CREATE TABLE IF NOT EXISTS tags (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '标签ID',
@@ -152,6 +166,17 @@ CREATE TABLE IF NOT EXISTS post_tags (
     FOREIGN KEY (post_id) REFERENCES posts(id),
     FOREIGN KEY (tag_id) REFERENCES tags(id)
 );
+
+DELIMITER //
+
+CREATE TRIGGER delete_tag_related_post_tags
+    AFTER DELETE ON tags
+    FOR EACH ROW
+BEGIN
+    DELETE FROM post_tags WHERE tag_id = OLD.id;
+END //
+
+DELIMITER ;
 
 -- 评论表
 CREATE TABLE IF NOT EXISTS comments (
@@ -225,5 +250,7 @@ CREATE TABLE follow (
     follower_id INT NOT NULL COMMENT '关注者ID',
     followed_id INT NOT NULL COMMENT '被关注者ID',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uk_follow (follower_id, followed_id)
+    UNIQUE KEY uk_follow (follower_id, followed_id),
+    FOREIGN KEY (follower_id) REFERENCES user(id) ON DELETE CASCADE,
+    FOREIGN KEY (followed_id) REFERENCES user(id) ON DELETE CASCADE
 );

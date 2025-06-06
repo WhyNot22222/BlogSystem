@@ -482,7 +482,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue';
+import { ref, reactive, computed, onMounted, watch, nextTick, onBeforeUnmount } from 'vue';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import request from '@/utils/request';
 import { useStore } from "vuex";
@@ -494,6 +494,7 @@ import defaultCover from '@/imgs/default-cover.jpg'
 
 const store = useStore();
 const userId = computed(() => store.getters.userId)
+const searchQuery = computed(() => store.state.searchQuery)
 
 // 当前用户信息
 const currentUser = reactive({
@@ -547,6 +548,19 @@ const fetchHotTags = async () => {
 const filteredPosts = computed(() => {
   let result = [...posts.value];
 
+  // 应用搜索过滤
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    result = result.filter(post => {
+      return (
+          post.title.toLowerCase().includes(query) ||
+          post.summary.toLowerCase().includes(query) ||
+          (post.tags && post.tags.some(tag => tag.toLowerCase().includes(query))) ||
+          post.author.name.toLowerCase().includes(query)
+      )
+    })
+  }
+
   // 根据标签筛选
   if (selectedTag.value) {
     result = result.filter(post => post.tags.includes(selectedTag.value));
@@ -595,6 +609,13 @@ onMounted(async () => {
   fetchHotTags();
   fetchAndProcessPosts();
 });
+
+// 组件卸载时移除监听
+onBeforeUnmount(() => {
+  window.removeEventListener('beforeunload', () => {
+    store.commit('setSearchQuery', '')
+  })
+})
 
 // 新增：监听 userId 的变化，以更新 currentUser 信息
 watch(userId, async (newUserId, oldUserId) => {
@@ -682,12 +703,47 @@ const toggleLike = async (post) => {
 };
 
 // 方法 - 点赞评论
-const toggleCommentLike = (comment) => {
-  comment.isLiked = !comment.isLiked;
-  comment.likes += comment.isLiked ? 1 : -1;
+const toggleCommentLike = async (comment) => {
+  try {
+    // 保存原始状态用于错误回滚
+    const originalIsLiked = comment.isLiked
+    const originalLikes = comment.likes
+    
+    // 立即更新UI状态
+    comment.isLiked = !comment.isLiked
+    comment.likes += comment.isLiked ? 1 : -1
 
-  // 实际项目中会发送API请求
-};
+    // 调用后端接口
+    const response = comment.isLiked 
+      ? await request.post('/comments/likes', null, {
+          params: {
+            commentId: comment.id,
+            userId: currentUser.id
+          }
+        })
+      : await request.delete('/comments/likes', {
+          params: {
+            commentId: comment.id,
+            userId: currentUser.id
+          }
+        })
+
+    if (response.code !== '200') {
+      // 回滚状态
+      comment.isLiked = originalIsLiked
+      comment.likes = originalLikes
+      ElMessage.error(response.message || '操作失败')
+    } else {
+      ElMessage.success(comment.isLiked ? '点赞成功' : '取消点赞成功')
+    }
+  } catch (error) {
+    // 请求失败回滚状态
+    comment.isLiked = originalIsLiked
+    comment.likes = originalLikes
+    console.error('点赞操作失败:', error)
+    ElMessage.error('网络异常，请稍后重试')
+  }
+}
 
 // 设置回复目标
 const setReplyTarget = (target, parentComment = null) => {
@@ -1028,34 +1084,44 @@ const fetchAndProcessPosts = async () => {
                 if (commentRes.code === '200') {
                   // 并行获取评论作者信息
                   postData.comments = await Promise.all(
-                      commentRes.data.map(async comment => {
-                        try {
-                          const userRes = await request.post(`/user/getUser`, null, {
+                    commentRes.data.map(async comment => {
+                      try {
+                        const [userRes, likesRes, isLikedRes] = await Promise.all([
+                          request.post(`/user/getUser`, null, {
+                            params: { userId: comment.userId }
+                          }),
+                          request.get(`/comments/likes/count/${comment.id}`),
+                          request.get(`/comments/likes/check`, {
                             params: {
-                              userId: comment.userId
+                              commentId: comment.id,
+                              userId: currentUser.id
                             }
-                          });
-                          if (userRes.code === '200') {
-                            return {
-                              ...comment,
-                              author: {
-                                name: userRes.data.username || '未知用户',
-                                avatar: await fetchUserAvatar(comment.userId)
-                              }
-                            };
-                          }
-                        } catch (e) {
-                          console.error(`获取用户${comment.userId}信息失败:`, e);
-                        }
+                          })
+                        ]);
+
                         return {
                           ...comment,
+                          likes: likesRes.data || 0,
+                          isLiked: isLikedRes.data || false,
+                          author: {
+                            name: userRes.data.username || '未知用户',
+                            avatar: await fetchUserAvatar(comment.userId)
+                          }
+                        };
+                      } catch (e) {
+                        console.error(`获取评论${comment.id}相关信息失败:`, e);
+                        return {
+                          ...comment,
+                          likes: 0,
+                          isLiked: false,
                           author: {
                             name: '未知用户',
                             avatar: '/placeholder.svg?height=32&width=32'
                           }
                         };
-                      })
-                  );
+                      }
+                  })
+                );
                 }
               } catch (userError) {
                 console.error(`获取用户 ${postData.userId} 信息失败:`, userError);
@@ -1067,7 +1133,7 @@ const fetchAndProcessPosts = async () => {
               ...comment,
               author: comment.author || { name: '未知用户', avatar: '/placeholder.svg?height=32&width=32' }, // 确保评论作者信息存在
               createdAt: comment.createdAt || new Date().toISOString(), // 确保评论时间存在
-              likes: comment.data || 0,
+              likes: comment.likes || 0,
               isLiked: comment.isLiked || false,
             })) : [];
             const tagRes = await request.get('/post-tags/name', {

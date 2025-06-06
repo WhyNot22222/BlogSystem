@@ -318,8 +318,11 @@ const passwordStrength = computed(() => {
   return { level, text, percent };
 });
 
-onMounted(() => {
-  const user = store.state.user;
+onMounted(async () => {
+  const userRes = await request.post('user/getUser', null, {
+    params: { userId: userId.value }
+  })
+  const user = userRes.data
   if (user && user.id) {
     profileForm.username = user.username || '';
     profileForm.bio = user.bio || '';

@@ -168,16 +168,13 @@
             </div>
             <p class="comment-text">{{ comment.content }}</p>
             <div class="comment-actions">
-              <button class="comment-action-btn" @click="likeComment(comment.id)">
+              <button class="comment-action-btn" @click="toggleCommentLike(comment)">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M7 10v12l4-4 4 4V10"/>
                   <path d="M5 6h14l-1 4H6z"/>
                 </svg>
                 {{ comment.likes }}
               </button>
-<!--              <button class="comment-action-btn" @click="replyToComment(comment.id)">-->
-<!--                回复-->
-<!--              </button>-->
             </div>
             <hr>
           </div>
@@ -318,7 +315,7 @@ const fetchBlogDetail = async (postId) => {
       const [tagIds, cover, fetchedComments] = await Promise.all([
         postHelper.fetchTags(blogData.id),
         postHelper.fetchCover(blogData.userId, blogData.id),
-        interactionHelper.fetchCommentsWithAuthors(interactionData.comments)
+        interactionHelper.fetchCommentsWithAuthors(interactionData.comments, currentUser.id)
       ])
 
       // 批量获取标签名称
@@ -589,18 +586,46 @@ const submitComment = async () => {
   }
 };
 
-const likeComment = (commentId) => {
-  const comment = comments.value.find(c => c.id === commentId)
-  if (comment) {
-    comment.likes++
-    // 这里可以调用API更新评论点赞
-    console.log('点赞评论:', commentId)
-  }
-}
+const toggleCommentLike = async (comment) => {
+  try {
+    // 保存原始状态用于错误回滚
+    const originalIsLiked = comment.isLiked
+    const originalLikes = comment.likes
+    
+    // 立即更新UI状态
+    comment.isLiked = !comment.isLiked
+    comment.likes += comment.isLiked ? 1 : -1
 
-const replyToComment = (commentId) => {
-  // 回复评论功能
-  console.log('回复评论:', commentId)
+    // 调用后端接口
+    const response = comment.isLiked 
+      ? await request.post('/comments/likes', null, {
+          params: {
+            commentId: comment.id,
+            userId: currentUser.id
+          }
+        })
+      : await request.delete('/comments/likes', {
+          params: {
+            commentId: comment.id,
+            userId: currentUser.id
+          }
+        })
+
+    if (response.code !== '200') {
+      // 回滚状态
+      comment.isLiked = originalIsLiked
+      comment.likes = originalLikes
+      ElMessage.error(response.message || '操作失败')
+    } else {
+      ElMessage.success(comment.isLiked ? '点赞成功' : '取消点赞成功')
+    }
+  } catch (error) {
+    // 请求失败回滚状态
+    comment.isLiked = originalIsLiked
+    comment.likes = originalLikes
+    console.error('点赞操作失败:', error)
+    ElMessage.error('网络异常，请稍后重试')
+  }
 }
 
 const navigateToPost = (postId) => {

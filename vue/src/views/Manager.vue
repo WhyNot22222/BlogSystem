@@ -14,15 +14,22 @@
 
       <div class="search-container">
         <el-input
+            v-model="searchQuery"
             placeholder="搜索内容"
             clearable
             class="search-input"
+            @keyup.enter="performSearch"
         >
           <template #prefix>
             <el-icon><Search /></el-icon>
           </template>
         </el-input>
-        <el-button type="primary" class="search-button">搜索</el-button>
+        <el-button
+          type="primary"
+          class="search-button"
+          @click="performSearch"
+        >
+          搜索</el-button>
       </div>
 
       <div class="user-actions">
@@ -155,6 +162,7 @@ import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const isCollapsed = ref(false)
+const searchQuery = ref('')
 
 const avatarUrl = ref('')
 const store = useStore()
@@ -250,6 +258,16 @@ const openBlogEditor = () => {
   // Open blog editor in a new tab
   window.open('/blog-editor', '_blank')
 }
+
+// 执行搜索
+const performSearch = () => {
+  if (searchQuery.value.trim()) {
+    // 存储搜索词到 Vuex
+    store.commit('SET_SEARCH_QUERY', searchQuery.value.trim())
+    // 导航到社区页面
+    router.push('/community')
+  }
+}
 </script>
 
 <style scoped>
@@ -322,7 +340,7 @@ const openBlogEditor = () => {
 }
 
 .search-input {
-  border-radius: 20px;
+  border-radius: 4px;
   transition: all 0.3s;
 }
 

@@ -44,6 +44,7 @@ public class UserService {
             user.setRole("user");
             userMapper.insertUser(user);
 
+            // 观察者模式主题通知点：发布用户注册事件
             eventPublisherService.publishUserRegisteredEvent(user);
 
         } catch (DataIntegrityViolationException e) {

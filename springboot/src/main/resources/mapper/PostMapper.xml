@@ -83,10 +83,10 @@
             p.views,
             u.username AS authorName
         FROM posts p
-                 JOIN user u ON p.user_id = u.id
+            JOIN user u ON p.user_id = u.id
         WHERE p.category_id = #{categoryId}
-          AND p.id != #{excludeId}
-          AND p.status = 'published'
+            AND p.id != #{excludeId}
+            AND p.status = 'published'
         ORDER BY p.published_at DESC
         LIMIT #{limit}
     </select>
@@ -101,11 +101,11 @@
     <!-- 查询相同标签的帖子 -->
     <select id="selectPostsByTags" resultType="com.yn.entity.Post">
         SELECT
-        p.id,
-        p.title,
-        p.cover_url AS coverUrl,
-        p.views,
-        u.username AS authorName,
+            p.id,
+            p.title,
+            p.cover_url AS coverUrl,
+            p.views,
+            u.username AS authorName,
         COUNT(pt.tag_id) AS common_tags
         FROM posts p
         JOIN post_tags pt ON p.id = pt.post_id
