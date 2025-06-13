@@ -3,6 +3,7 @@ package com.yn.controller;
 
 import com.github.pagehelper.PageInfo;
 import com.yn.common.Result;
+import com.yn.entity.ForgotPasswordRequest;
 import com.yn.entity.LoginRequest;
 import com.yn.entity.User;
 import com.yn.service.UserService;
@@ -116,6 +117,40 @@ public class UserController {
         try {
             boolean hasPermission = userService.checkPermission(userId, requiredRole);
             return Result.success(hasPermission);
+        } catch (RuntimeException e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
+    // 发送验证码
+    @PostMapping("/sendVerificationCode")
+    public Result sendVerificationCode(@RequestParam String email) {
+        try {
+            userService.sendVerificationCode(email);
+            return Result.success("验证码发送成功");
+        } catch (RuntimeException e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
+    // 验证验证码
+    @PostMapping("/verifyCode")
+    public Result verifyCode(@RequestParam String email,
+                             @RequestParam String code) {
+        try {
+            userService.verifyCode(email, code);
+            return Result.success("验证码验证成功");
+        } catch (RuntimeException e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
+    // 重置密码
+    @PostMapping("/resetPassword")
+    public Result resetPassword(@RequestBody ForgotPasswordRequest request) {
+        try {
+            userService.resetPassword(request);
+            return Result.success("密码重置成功");
         } catch (RuntimeException e) {
             return Result.error(e.getMessage());
         }

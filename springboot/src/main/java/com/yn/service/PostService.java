@@ -2,6 +2,7 @@ package com.yn.service;
 
 import com.yn.entity.Post;
 import com.yn.mapper.PostMapper;
+import com.yn.service.strategy.RelatedPostStrategyContext;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +13,10 @@ public class PostService {
 
     @Resource
     private PostMapper postMapper;
+
+    // 使用策略上下文处理相关文章推荐逻辑
+    @Resource
+    private RelatedPostStrategyContext strategyContext;
 
     public Post createPost(Post post) {
         postMapper.insertPost(post);
@@ -46,71 +51,20 @@ public class PostService {
         return postMapper.selectPostsByIds(postIds);
     }
 
+    /**
+     * 获取相关文章（使用策略模式）
+     *
+     * @param postId 当前文章ID
+     * @param limit 需要获取的相关文章数量
+     * @return 推荐文章列表（已去重）
+     */
     public List<Post> getRelatedPosts(Long postId, int limit) {
-        // 1. 获取当前帖子信息
         Post currentPost = getPostById(postId);
         if (currentPost == null) {
-            return null;
+            return Collections.emptyList();
         }
-
-        // 2. 获取相关帖子
-        List<Post> relatedPosts = new ArrayList<>();
-
-        // 策略1：相同分类的帖子
-        if (currentPost.getCategoryId() != null) {
-            List<Post> sameCategory = postMapper.selectPostsByCategory(
-                    currentPost.getCategoryId(),
-                    postId,
-                    limit
-            );
-            relatedPosts.addAll(sameCategory);
-        }
-
-        // 策略2：相同标签的帖子（如果策略1不够）
-        if (relatedPosts.size() < limit) {
-            List<Long> tagIds = postMapper.selectTagIdsByPostId(postId);
-            if (!tagIds.isEmpty()) {
-                List<Post> sameTags = postMapper.selectPostsByTags(
-                        tagIds,
-                        postId,
-                        limit - relatedPosts.size()
-                );
-                relatedPosts.addAll(sameTags);
-            }
-        }
-
-        // 策略3：相同作者的帖子（如果还不够）
-        if (relatedPosts.size() < limit && currentPost.getUserId() != null) {
-            List<Post> sameAuthor = postMapper.selectPostsByAuthor(
-                    currentPost.getUserId(),
-                    postId,
-                    limit - relatedPosts.size()
-            );
-            relatedPosts.addAll(sameAuthor);
-        }
-
-        // 策略4：热门文章（作为后备）
-        if (relatedPosts.size() < limit) {
-            List<Post> popularPosts = postMapper.selectPopularPosts(
-                    postId,
-                    limit - relatedPosts.size()
-            );
-            relatedPosts.addAll(popularPosts);
-        }
-
-        // 去重（避免重复添加同一篇文章）
-        Set<Long> addedIds = new HashSet<>();
-        List<Post> distinctPosts = new ArrayList<>();
-
-        for (Post post : relatedPosts) {
-            if (!addedIds.contains(post.getId())) {
-                distinctPosts.add(post);
-                addedIds.add(post.getId());
-            }
-            if (distinctPosts.size() >= limit) break;
-        }
-
-        return distinctPosts;
+        // 通过策略上下文执行多种获取策略
+        return strategyContext.executeStrategies(currentPost, postId, limit);
     }
 
     public void incrementViews(Long postId) {

@@ -2,11 +2,14 @@ package com.yn.service;
 
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.yn.entity.FavoritesCollection;
+import com.yn.cache.VerificationCodeCache;
+import com.yn.entity.ForgotPasswordRequest;
 import com.yn.entity.User;
 import com.yn.mapper.UserMapper;
-import com.yn.event.UserRegisteredEvent;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.annotation.Resource;
@@ -20,6 +23,12 @@ public class UserService {
 
     @Resource
     private EventPublisherService eventPublisherService;
+
+    @Resource
+    private JavaMailSender mailSender;
+
+    @Resource
+    private VerificationCodeCache verificationCodeCache;
 
     public List<User> selectAll() {
         return userMapper.selectAll();
@@ -123,5 +132,82 @@ public class UserService {
             return false;
         }
         return user.getRole().equals(requiredRole);
+    }
+
+    // ================== 忘记密码功能实现 ==================
+
+    /**
+     * 发送验证码到用户邮箱
+     * @param email 用户邮箱
+     */
+    public void sendVerificationCode(String email) {
+        // 检查邮箱是否注册
+        User user = userMapper.findByEmail(email);
+        if (user == null) {
+            throw new RuntimeException("该邮箱未注册");
+        }
+
+        // 生成6位数字验证码
+        String code = RandomStringUtils.randomNumeric(6);
+
+        // 存储验证码到缓存
+        verificationCodeCache.storeCode(email, code);
+
+        // 发送验证码邮件
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("2993946158@qq.com");
+        message.setTo(email);
+        message.setSubject("MyBLOG密码重置验证码");
+        message.setText("您的密码重置验证码是: " + code + "\n\n"
+                + "验证码有效期为5分钟，请尽快完成验证。\n"
+                + "如果您没有请求重置密码，请忽略此邮件。\n"
+//                + "可能是哪个小可爱连自己的邮箱都不记得发错了。\n"
+                + "\nHandsome WhyNot Promise");
+
+        mailSender.send(message);
+    }
+
+    /**
+     * 验证用户输入的验证码
+     * @param email 用户邮箱
+     * @param code 验证码
+     */
+    public void verifyCode(String email, String code) {
+        if (!verificationCodeCache.isValidCode(email, code)) {
+            throw new RuntimeException("验证码无效或已过期");
+        }
+        // 标记邮箱为已验证状态
+        verificationCodeCache.markAsVerified(email);
+    }
+
+    /**
+     * 重置用户密码
+     * @param request 重置密码请求
+     */
+    @Transactional
+    public void resetPassword(ForgotPasswordRequest request) {
+        // 检查邮箱是否已验证
+        if (!verificationCodeCache.isVerified(request.getEmail())) {
+            throw new RuntimeException("请先完成邮箱验证");
+        }
+
+        // 检查密码是否一致
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new RuntimeException("两次输入的密码不一致");
+        }
+
+        // 查找用户
+        User user = userMapper.findByEmail(request.getEmail());
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
+
+        userMapper.updatePassword(user.getId(), request.getNewPassword());
+
+        // 清除缓存中的验证码
+        verificationCodeCache.removeCode(request.getEmail());
+
+        // 发布密码重置事件
+        eventPublisherService.publishPasswordResetEvent(user);
     }
 }

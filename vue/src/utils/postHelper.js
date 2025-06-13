@@ -7,8 +7,8 @@ export const fetchCover = async (userId, postId) => {
     try {
       const response = await request.get('/file/getCover', {
         params: { 
-            userId: userId,
-            postId: postId
+          userId: userId,
+          postId: postId
         }
       });
       
@@ -16,18 +16,18 @@ export const fetchCover = async (userId, postId) => {
         const binaryString = window.atob(response.data);
         const bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
+          bytes[i] = binaryString.charCodeAt(i);
         }
         const blob = new Blob([bytes], { type: 'image/jpeg' });
         return URL.createObjectURL(blob);
       } else {
         console.log('封面加载失败:', response.msg);
-        // ElMessage.info('封面加载失败：' + response.msg + '，请检查是否有封面');
+        ElMessage.info('封面加载失败：' + response.msg + '，请检查是否有封面');
         return ''; // 清空封面显示
       }
     } catch (error) {
-        console.error('封面加载失败:', error);
-        return ''; // 清空封面显示
+      console.log('封面加载失败:', error);
+      return ''; // 清空封面显示
     }
 }
 

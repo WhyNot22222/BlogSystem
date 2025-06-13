@@ -127,8 +127,8 @@ import {
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/utils/request'
 import { useStore } from "vuex";
-import defaultAvatar from '@/imgs/default.jpg'
-import defaultCover from '@/imgs/default-cover.jpg'
+import defaultAvatar from '@/assets/imgs/default.jpg'
+import defaultCover from '@/assets/imgs/default-cover.jpg'
 import { getUserName, fetchUserAvatar } from '@/utils/userHelper';
 import BlogPreviewDialog from '@/components/BlogPreviewDialog.vue';
 import { formatTime } from '@/utils/dateUtils';

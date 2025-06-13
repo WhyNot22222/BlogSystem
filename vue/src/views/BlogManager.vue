@@ -189,7 +189,7 @@ import { useStore } from 'vuex'
 import BlogPreviewDialog from '@/components/BlogPreviewDialog.vue'
 import * as postHelper from "@/utils/postHelper.js";
 import * as userHelper from "@/utils/userHelper.js";
-import defaultCover from '@/imgs/default-cover.jpg'
+import defaultCover from '@/assets/imgs/default-cover.jpg'
 import {
   BookOpen,
   Plus,
@@ -310,11 +310,8 @@ const handleFilter = () => {
 }
 
 onMounted(async () => {
-  const hasAdminPermission = await userHelper.checkPermission(userId.value, 'admin')
-  if (hasAdminPermission) {
-    hasPermission.value = true
-    await fetchBlogs();
-  }
+  hasPermission.value = true
+  await fetchBlogs();
 })
 
 const previewVisible = ref(false)

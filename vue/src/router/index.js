@@ -1,7 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Home from '../views/Home.vue'
 import Manager from '../views/Manager.vue'
-import Blog from '../views/Blog.vue'
 import LoginRegister from '../views/LoginRegister.vue'
 import Community from '../views/Community.vue'
 import AccountSettings from '../views/AccountSettings.vue'
@@ -26,7 +24,6 @@ const router = createRouter({
       redirect: '/login',
       children: [
         { path: '/home', component: Community },
-        { path: '/blog', component: EnhancedCommunity },
         { path: '/community', component: EnhancedCommunity },
         { path: '/follow', component: Follow },
         { path: '/collect', component: Collection },
@@ -34,7 +31,6 @@ const router = createRouter({
         { path: '/manage/users', component: UserManager },
         { path: '/manage/comments', component: CommentManager },
         { path: '/settings/profile', component: AccountSettings },
-        { path: '/settings/website', component: Follow },
       ]
     },
     {

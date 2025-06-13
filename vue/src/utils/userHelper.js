@@ -1,6 +1,6 @@
 import request from '@/utils/request'
 
-import defaultAvatar from '@/imgs/default.jpg'
+import defaultAvatar from '@/assets/imgs/default.jpg'
 import { reactive } from 'vue'
 import {ElMessage} from "element-plus";
 
@@ -76,7 +76,7 @@ export const checkPermission = async (userId, requiredRole) => {
     })
 
     if (response.code === '200') {
-      return true
+      return response.data
     } else {
       ElMessage.error('权限验证失败: ' + (response.msg || '您不是管理员'))
       return false

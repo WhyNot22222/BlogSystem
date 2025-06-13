@@ -35,7 +35,7 @@
                 >
                   <el-button type="primary">更换头像</el-button>
                 </el-upload>
-                <p class="upload-tip">支持 JPG、PNG 格式，文件大小不超过 2MB</p>
+                <p class="upload-tip">支持 JPG、PNG 格式，文件大小不超过 5MB</p>
               </div>
             </div>
 
@@ -180,7 +180,7 @@ import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import request from '@/utils/request';
 import { useStore } from 'vuex';
-import defaultAvatar from '@/imgs/default.jpg';
+import defaultAvatar from '@/assets/imgs/default.jpg';
 
 const store = useStore();
 const userId = computed(() => store.getters.userId)
@@ -211,7 +211,7 @@ const profileForm = reactive({
 const profileRules = {
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' }
+    { min: 2, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' }
   ],
   nickname: [
     { required: true, message: '请输入昵称', trigger: 'blur' },
@@ -319,7 +319,7 @@ const passwordStrength = computed(() => {
 });
 
 onMounted(async () => {
-  const userRes = await request.post('user/getUser', null, {
+  const userRes = await request.post('/user/getUser', null, {
     params: { userId: userId.value }
   })
   const user = userRes.data
@@ -342,14 +342,14 @@ onMounted(async () => {
 
 const handleAvatarChange = (file) => {
   const isImage = ['image/jpeg', 'image/png'].includes(file.raw.type);
-  const isLt2M = file.size / 1024 / 1024 < 2;
+  const isLt5M = file.size / 1024 / 1024 < 5;
 
   if (!isImage) {
     ElMessage.error('只能上传 JPG/PNG 格式的图片');
     return;
   }
-  if (!isLt2M) {
-    ElMessage.error('图片大小不能超过 2MB');
+  if (!isLt5M) {
+    ElMessage.error('图片大小不能超过 5MB');
     return;
   }
 

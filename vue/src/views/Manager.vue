@@ -81,10 +81,10 @@
             <span>首页</span>
           </el-menu-item>
 
-          <el-menu-item index="2">
-            <el-icon><Document /></el-icon>
-            <span>博客</span>
-          </el-menu-item>
+<!--          <el-menu-item index="2">-->
+<!--            <el-icon><Document /></el-icon>-->
+<!--            <span>博客</span>-->
+<!--          </el-menu-item>-->
 
           <el-menu-item index="3">
             <el-icon><ChatDotRound /></el-icon>
@@ -119,7 +119,7 @@
               <span>系统设置</span>
             </template>
             <el-menu-item index="7-1">个人设置</el-menu-item>
-            <el-menu-item index="7-2">网站设置</el-menu-item>
+            <el-menu-item index="7-2" @click="handleLogout">退出登录</el-menu-item>
           </el-sub-menu>
         </el-menu>
       </aside>
@@ -140,7 +140,7 @@
 import { computed } from 'vue'
 import { useStore } from 'vuex'
 import { onMounted, ref, onUnmounted } from 'vue'
-import defaultAvatar from '@/imgs/default.jpg'  // 导入默认头像
+import defaultAvatar from '@/assets/imgs/default.jpg'  // 导入默认头像
 import {
   House,
   Menu,
@@ -191,7 +191,6 @@ const handleMenuSelect = (index) => {
     '6-2': '/manage/users',     // 用户管理
     '6-3': '/manage/comments',  // 评论管理
     '7-1': '/settings/profile', // 个人设置
-    '7-2': '/settings/website'  // 网站设置
   }
   if (routeMap[index]) {
     router.push(routeMap[index])

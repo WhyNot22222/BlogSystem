@@ -1,16 +1,16 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS user;
-DROP TABLE IF EXISTS user_roles;
-DROP TABLE IF EXISTS roles;
-DROP TABLE IF EXISTS comment_likes;
-DROP TABLE IF EXISTS post_likes;
 DROP TABLE IF EXISTS comments;
+DROP TABLE IF EXISTS comment_likes;
+DROP TABLE IF EXISTS follow;
+DROP TABLE IF EXISTS favorites;
+DROP TABLE IF EXISTS favorites_collections;
+DROP TABLE IF EXISTS post_likes;
 DROP TABLE IF EXISTS post_tags;
-DROP TABLE IF EXISTS tags;
 DROP TABLE IF EXISTS posts;
+DROP TABLE IF EXISTS tags;
 DROP TABLE IF EXISTS categories;
-DROP TABLE IF EXISTS user;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -26,10 +26,10 @@ CREATE TABLE IF NOT EXISTS user (
     phone VARCHAR(20) COMMENT '手机号码'
 );
 
-INSERT INTO user (username, password, email) VALUES
-    ('admin', 'admin', '2993946158@qq.com'),
-    ('promise', '123456', 'promise@nuaa.edu.cn'),
-    ('yn', '222', 'yn@nju.edu.cn');
+INSERT INTO user (username, password, email, role) VALUES
+    ('admin', 'admin', '2993946158@qq.com', 'admin'),
+    ('promise', '123456', 'promise@nuaa.edu.cn', 'user'),
+    ('yn', '222', 'yn@nju.edu.cn', 'user');
 
 -- 分类表
 CREATE TABLE IF NOT EXISTS categories (
@@ -46,11 +46,12 @@ INSERT INTO categories (name, description) VALUES
     ('Java', ''),
     ('Python', ''),
     ('前端', ''),
-    ('后端', '');
+    ('后端', ''),
+    ('C++', '');
 
--- 文章表
+-- 博客表
 CREATE TABLE IF NOT EXISTS posts (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '文章ID',
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '博客ID',
     title VARCHAR(255) NOT NULL COMMENT '标题',
     content TEXT NOT NULL COMMENT '内容',
     formatted_content TEXT NOT NULL COMMENT '格式化内容',
@@ -72,70 +73,70 @@ CREATE TABLE IF NOT EXISTS posts (
 
 INSERT INTO posts (title, content, formatted_content, views, summary, status, user_id, category_id, created_at, published_at) VALUES
     (
-    'PyTorch入门与核心概念详解：从基础到实战问题解决',
-    '用户/forch 编写 Transformer 模型时遇到了多个错误，包括维度不匹配、NaN 损失、注意力权重未记录等问题...\n- 阅读 760\n- 38 赞\n- 收藏 33',
-    '<h2>什么是设计模式</h2>
-    <p>设计模式是在软件设计中常见问题的典型解决方案。它们就像能根据需求进行调整的预制蓝图，可用于解决代码中反复出现的设计问题。</p>
+      'PyTorch入门与核心概念详解：从基础到实战问题解决',
+      '用户/forch 编写 Transformer 模型时遇到了多个错误，包括维度不匹配、NaN 损失、注意力权重未记录等问题...\n- 阅读 760\n- 38 赞\n- 收藏 33',
+      '<h2>什么是设计模式</h2>
+      <p>设计模式是在软件设计中常见问题的典型解决方案。它们就像能根据需求进行调整的预制蓝图，可用于解决代码中反复出现的设计问题。</p>
 
-    <h2>设计模式的分类</h2>
-    <p>设计模式通常分为三大类：</p>
-    <ul>
-      <li><strong>创建型模式</strong>：提供创建对象的机制，增加已有代码的灵活性和可复用性</li>
-      <li><strong>结构型模式</strong>：介绍如何将对象和类组装成较大的结构，并同时保持结构的灵活和高效</li>
-      <li><strong>行为型模式</strong>：负责对象间的高效沟通和职责委派</li>
-    </ul>
+      <h2>设计模式的分类</h2>
+      <p>设计模式通常分为三大类：</p>
+      <ul>
+        <li><strong>创建型模式</strong>：提供创建对象的机制，增加已有代码的灵活性和可复用性</li>
+        <li><strong>结构型模式</strong>：介绍如何将对象和类组装成较大的结构，并同时保持结构的灵活和高效</li>
+        <li><strong>行为型模式</strong>：负责对象间的高效沟通和职责委派</li>
+      </ul>
 
-    <h2>常用的创建型模式</h2>
-    <h3>1. 单例模式 (Singleton)</h3>
-    <p>单例模式确保一个类只有一个实例，并提供一个全局访问点。</p>
+      <h2>常用的创建型模式</h2>
+      <h3>1. 单例模式 (Singleton)</h3>
+      <p>单例模式确保一个类只有一个实例，并提供一个全局访问点。</p>
 
-    <h3>2. 工厂方法模式 (Factory Method)</h3>
-    <p>工厂方法模式提供了一种创建对象的接口，但由子类决定要实例化哪个类。</p>
+      <h3>2. 工厂方法模式 (Factory Method)</h3>
+      <p>工厂方法模式提供了一种创建对象的接口，但由子类决定要实例化哪个类。</p>
 
-    <p>本文将继续深入探讨其他设计模式的实现和应用场景...</p>',
-     0,
-    '用户/forch 编写 Transformer 模型时遇到了多个错误，包括维度不匹配、NaN 损失、注意力权重未记录等问题...',
-    'published',
-    1,
-    1,
-    NOW(),
-    NOW()
+      <p>本文将继续深入探讨其他设计模式的实现和应用场景...</p>',
+      0,
+      '用户/forch 编写 Transformer 模型时遇到了多个错误，包括维度不匹配、NaN 损失、注意力权重未记录等问题...',
+      'published',
+      1,
+      1,
+      NOW(),
+      NOW()
     ),
     (
-    '408考研经典详解：2009年第10题',
-    '所以，如果用二路归并排序算法，第二趟排序之后所得到的序列中，前4个关键字应该是有序的，但是...\n- 阅读 448\n- 9 赞\n- 收藏 5',
-    '所以，如果用二路归并排序算法，第二趟排序之后所得到的序列中，前4个关键字应该是有序的，但是...\n- 阅读 448\n- 9 赞\n- 收藏 5',
-    0,
-    '二路归并排序算法第二趟排序后的序列分析',
-    'published',
-    1,
-    1,
-    NOW(),
-    NOW()
+      '408考研经典详解：2009年第10题',
+      '所以，如果用二路归并排序算法，第二趟排序之后所得到的序列中，前4个关键字应该是有序的，但是...\n',
+      '所以，如果用二路归并排序算法，第二趟排序之后所得到的序列中，前4个关键字应该是有序的，但是...\n',
+      0,
+      '二路归并排序算法第二趟排序后的序列分析',
+      'published',
+      1,
+      1,
+      NOW(),
+      NOW()
     ),
     (
-    '码住了！一文教你玩好豆包AI编程，编程效率原地起飞',
-    '看不懂代码？跟它！写不动代码？问豆包！Al助力，编程从此so easy！',
-    '看不懂代码？跟它！写不动代码？问豆包！Al助力，编程从此so easy！',
-    0,
-    '豆包AI编程工具使用指南',
-    'published',
-    1,
-    1,
-    NOW(),
-    NOW()
+      '码住了！一文教你玩好豆包AI编程，编程效率原地起飞',
+      '看不懂代码？跟它！写不动代码？问豆包！Al助力，编程从此so easy！',
+      '看不懂代码？跟它！写不动代码？问豆包！Al助力，编程从此so easy！',
+      0,
+      '豆包AI编程工具使用指南',
+      'published',
+      1,
+      1,
+      NOW(),
+      NOW()
     ),
     (
-    'Python基础总结(十)之函数',
-    '函数的定义要使用def关键字，def后面紧跟函数名，给出的为函数的代码块，上述即为一个简单的函数，定义了一个名为test的函数...\n- 阅读 443\n- 4 赞\n- 收藏 11',
-    '函数的定义要使用def关键字，def后面紧跟函数名，给出的为函数的代码块，上述即为一个简单的函数，定义了一个名为test的函数...\n- 阅读 443\n- 4 赞\n- 收藏 11',
-    0,
-    'Python函数定义与基础用法详解',
-    'published',
-    1,
-    1,
-    NOW(),
-    NOW()
+      'Python基础总结(十)之函数',
+      '函数的定义要使用def关键字，def后面紧跟函数名，给出的为函数的代码块，上述即为一个简单的函数，定义了一个名为test的函数...\n- 阅读 443\n- 4 赞\n- 收藏 11',
+      '函数的定义要使用def关键字，def后面紧跟函数名，给出的为函数的代码块，上述即为一个简单的函数，定义了一个名为test的函数...\n- 阅读 443\n- 4 赞\n- 收藏 11',
+      0,
+      'Python函数定义与基础用法详解',
+      'published',
+      1,
+      1,
+      NOW(),
+      NOW()
     );
 
 DELIMITER //
@@ -158,9 +159,9 @@ CREATE TABLE IF NOT EXISTS tags (
     name VARCHAR(50) NOT NULL UNIQUE COMMENT '标签名称'
 );
 
--- 文章-标签连接表
+-- 博客-标签连接表
 CREATE TABLE IF NOT EXISTS post_tags (
-    post_id BIGINT NOT NULL COMMENT '文章ID',
+    post_id BIGINT NOT NULL COMMENT '博客ID',
     tag_id BIGINT NOT NULL COMMENT '标签ID',
     PRIMARY KEY (post_id, tag_id),
     FOREIGN KEY (post_id) REFERENCES posts(id),
@@ -181,7 +182,7 @@ DELIMITER ;
 -- 评论表
 CREATE TABLE IF NOT EXISTS comments (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '评论ID',
-    post_id BIGINT NOT NULL COMMENT '文章ID',
+    post_id BIGINT NOT NULL COMMENT '博客ID',
     parent_id BIGINT COMMENT '父评论ID',
     user_id BIGINT COMMENT '用户ID',
     content TEXT NOT NULL COMMENT '评论内容',
@@ -198,10 +199,10 @@ VALUES (1, 1, '这篇文章很有帮助！');
 INSERT INTO comments (post_id, parent_id, user_id, content)
 VALUES (1, LAST_INSERT_ID(), 1, '我完全同意作者的观点');
 
--- 文章点赞表
+-- 博客点赞表
 CREATE TABLE IF NOT EXISTS post_likes (
     id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '点赞ID',
-    post_id BIGINT NOT NULL COMMENT '文章ID',
+    post_id BIGINT NOT NULL COMMENT '博客ID',
     user_id BIGINT NOT NULL COMMENT '用户ID',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '点赞时间',
     UNIQUE KEY (post_id, user_id),
@@ -235,7 +236,7 @@ CREATE TABLE IF NOT EXISTS favorites_collections (
 -- 收藏表
 CREATE TABLE IF NOT EXISTS favorites (
     collection_id BIGINT NOT NULL COMMENT '收藏夹ID',
-    post_id BIGINT NOT NULL COMMENT '文章ID',
+    post_id BIGINT NOT NULL COMMENT '博客ID',
     user_id BIGINT NOT NULL COMMENT '操作用户ID',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '收藏时间',
     PRIMARY KEY (collection_id, post_id),

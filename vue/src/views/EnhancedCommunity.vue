@@ -490,7 +490,7 @@ import { fetchUserAvatar } from '@/utils/userHelper';
 import * as userHelper from "@/utils/userHelper.js";
 import BlogPreviewDialog from '@/components/BlogPreviewDialog.vue'
 import * as postHelper from "@/utils/postHelper.js";
-import defaultCover from '@/imgs/default-cover.jpg'
+import defaultCover from '@/assets/imgs/default-cover.jpg'
 
 const store = useStore();
 const userId = computed(() => store.getters.userId)

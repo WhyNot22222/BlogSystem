@@ -159,12 +159,7 @@
 
           <div class="toolbar-group">
             <button class="format-btn" @click="clearFormatting" title="清除格式">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/>
-                <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/>
-                <line x1="m15 15 6 6"/>
-                <line x1="m21 15-6 6"/>
-              </svg>
+              <Close />
             </button>
           </div>
 
@@ -428,6 +423,7 @@
 
 <script setup>
 import { ref, computed, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
+import { Close } from '@element-plus/icons-vue'
 import { useRouter, useRoute } from 'vue-router'
 import request from '@/utils/request'
 import { useStore } from 'vuex'
@@ -1032,7 +1028,7 @@ const fetchPost = async (id) => {
       blogContent.value = post.content
       blogSummary.value = post.summary
       category.value = post.categoryId
-      coverUrl.value = await postHelper.fetchCover(userId.value, postId.value)
+      coverUrl.value = await postHelper.fetchCover(userId.value, post.id)
       allowComments.value = post.allowComments
       isPublic.value = post.public
       isPinned.value = post.pinned
@@ -1066,14 +1062,22 @@ const fetchBlogData = async (postId) => {
       category.value = postData.categoryId
       dynamicTags.value = postData.tags || []
       postStatus.value = postData.status
-      coverUrl.value = postData.coverUrl
+      coverUrl.value = await postHelper.fetchCover(userId.value, postData.id)
       createdAt.value = postData.createdAt
       updatedAt.value = postData.updatedAt
       publishedAt.value = postData.publishedAt
+      const tagIds = await postHelper.fetchTags(postData.id)
+      const tagNames = await Promise.all(
+        tagIds.map(async tagId => {
+          const name = await postHelper.fetchTagName(Number(tagId));
+          return name;
+        })
+      );
+      dynamicTags.value = tagNames || []
     }
   } catch (error) {
-    ElMessage.error('加载博客数据失败')
-    console.error('Fetch blog data error:', error)
+    ElMessage.error('加载博客数据失败：' + error)
+    console.log('Fetch blog data error:', error)
   }
 }
 

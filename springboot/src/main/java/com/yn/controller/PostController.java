@@ -51,12 +51,18 @@ public class PostController {
                 Result.error("文章未找到");
     }
 
+    /**
+     * 获取所有已发布的博客文章
+     */
     @GetMapping("/selectAll")
     public Result getPublishedPosts() {
         List<Post> posts = postService.getPublishedPosts();
         return Result.success(posts);
     }
 
+    /**
+     * 获取用户关注的所有博客文章
+     */
     @GetMapping("/followed")
     public Result getFollowedPosts(
         @RequestParam String userIds) {
@@ -67,6 +73,9 @@ public class PostController {
         return Result.success(posts);
     }
 
+    /**
+     * 获取指定ID的博客文章的相关文章
+     */
     @GetMapping("/related/{id}")
     public Result getRelatedPosts(
             @PathVariable Long id,
@@ -75,12 +84,18 @@ public class PostController {
         return Result.success(relatedPosts);
     }
 
+    /**
+     * 获取博客的浏览量
+     */
     @PutMapping("/{postId}/views")
     public Result incrementViews(@PathVariable Long postId) {
         postService.incrementViews(postId);
         return Result.success();
     }
 
+    /**
+     * 获取某个用户的所有博客文章
+     */
     @GetMapping("/user-posts")
     public Result getPostsByUser(@RequestParam Long userId) {
         List<Post> posts = postService.getPostsByUserId(userId);

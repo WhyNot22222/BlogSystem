@@ -668,8 +668,10 @@ const getEmptyStateMessage = () => {
 
 // 初始化加载
 onMounted(async () => {
-  hasPermission.value = await checkPermission(userId.value, 'admin');
-  if (hasPermission.value) {
+  const hasAdminPermission = await checkPermission(userId.value, 'admin');
+  console.log('用户是否有管理员权限:', hasAdminPermission)
+  if (hasAdminPermission) {
+    hasPermission.value = true;
     loadComments();
   }
 });
@@ -680,6 +682,14 @@ onMounted(async () => {
   padding: 24px;
   background-color: #f5f7fa;
   min-height: 100vh;
+}
+
+.permission-error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  background-color: #f5f7fa;
 }
 
 /* 页面标题 */

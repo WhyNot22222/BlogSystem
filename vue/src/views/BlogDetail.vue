@@ -230,7 +230,7 @@ import * as postHelper from "@/utils/postHelper";
 import * as userHelper from '@/utils/userHelper'
 import * as interactionHelper from '@/utils/interactionHelper'
 import FavoritesManager from '@/components/FavoritesManager.vue'
-import defaultCover from '@/imgs/default-cover.jpg'
+import defaultCover from '@/assets/imgs/default-cover.jpg'
 
 const showFavoritesManager = ref(false)
 
@@ -654,6 +654,16 @@ onMounted(async () => {
       return
     }
 
+    try {
+      const res = await request.put(`/posts/${postId}/views`)
+      if (res.code === '200') {
+        console.log('浏览量统计成功:', res)
+      }
+    } catch (error) {
+      ElMessage.log('浏览量统计失败')
+      console.error('views update error:', error)
+    }
+
     if (currentUser.id) {
       await userHelper.fetchCurrentUserDetails(currentUser)
       console.log('已登录，获取当前用户信息:', currentUser)
@@ -884,12 +894,16 @@ watch(
   margin-bottom: 32px;
   border-radius: 8px;
   overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .blog-cover img {
   width: 100%;
   height: auto;
   display: block;
+  border-radius: 8px;
 }
 
 .blog-summary {
