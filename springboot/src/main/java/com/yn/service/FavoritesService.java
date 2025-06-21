@@ -71,7 +71,6 @@ public class FavoritesService {
         if (collection == null) {
             return false;
         }
-        // 实际项目中需要添加用户权限验证，这里假设已通过安全框架验证
         favoritesMapper.updateCollectionName(collectionId, newName);
         return true;
     }

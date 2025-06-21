@@ -257,7 +257,7 @@ const fetchBlogs = async () => {
     }));
     console.log('获取博客列表：', response.data)
   } catch (error) {
-    ElMessage.error('获取博客列表失败')
+    ElMessage.error('获取博客列表失败：' + error.message)
   } finally {
     loading.value = false
   }

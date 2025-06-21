@@ -1,6 +1,7 @@
 package com.yn.mapper;
 
 import com.yn.entity.Category;
+
 import java.util.List;
 
 public interface CategoryMapper {

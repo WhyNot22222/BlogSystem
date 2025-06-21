@@ -147,6 +147,4 @@ public class Post {
     public void setViews(Integer views) {
         this.views = views;
     }
-
-    // Getters and Setters
 }

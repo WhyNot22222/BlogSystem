@@ -14,23 +14,27 @@ import java.io.IOException;
 @Service
 public class FileService {
 
+    private final FileStrategy avatarStrategy;
+    private final FileStrategy coverStrategy;
+
+    public FileService() {
+        this.avatarStrategy = new AvatarFileStrategy();
+        this.coverStrategy = new CoverFileStrategy();
+    }
+
     public String uploadAvatar(MultipartFile file, Long userId) throws IOException {
-        FileStrategy avatarStrategy = new AvatarFileStrategy();
         return avatarStrategy.upload(file, userId);
     }
 
     public String uploadCover(MultipartFile file, Long userId, Long postId) throws IOException {
-        FileStrategy coverStrategy = new CoverFileStrategy();
         return coverStrategy.upload(file, userId, postId);
     }
 
     public String getAvatar(Long userId) throws IOException {
-        FileStrategy avatarStrategy = new AvatarFileStrategy();
         return avatarStrategy.get(userId);
     }
 
     public String getCover(Long userId, Long postId) throws IOException {
-        FileStrategy coverStrategy = new CoverFileStrategy();
         return coverStrategy.get(userId, postId);
     }
 }

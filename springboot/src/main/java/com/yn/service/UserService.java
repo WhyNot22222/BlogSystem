@@ -6,9 +6,11 @@ import com.yn.cache.VerificationCodeCache;
 import com.yn.entity.ForgotPasswordRequest;
 import com.yn.entity.User;
 import com.yn.mapper.UserMapper;
+import com.yn.service.factory.RegistrationValidatorFactory;
+import com.yn.service.factory.UpdateValidatorFactory;
+import com.yn.service.factory.UserValidator;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,12 +44,9 @@ public class UserService {
 
     @Transactional
     public void register(User user) {
-        if (userMapper.findByUsername(user.getUsername()) != null) {
-            throw new RuntimeException("用户名已被注册");
-        }
-        if (userMapper.findByEmail(user.getEmail()) != null) {
-            throw new RuntimeException("邮箱已被注册");
-        }
+        // 使用注册工厂创建校验器
+        UserValidator validator = new RegistrationValidatorFactory().createValidator(userMapper);
+        validator.validate(user, null);
 
         try {
             user.setRole("user");
@@ -77,15 +76,9 @@ public class UserService {
     public void updateProfile(User user) {
         User originalUser = userMapper.findById(user.getId());
 
-        if (!originalUser.getUsername().equals(user.getUsername()) &&
-                userMapper.findByUsername(user.getUsername()) != null) {
-            throw new RuntimeException("用户名已被使用");
-        }
-
-        if (!originalUser.getEmail().equals(user.getEmail()) &&
-                userMapper.findByEmail(user.getEmail()) != null) {
-            throw new RuntimeException("邮箱已被注册");
-        }
+        // 使用更新工厂创建校验器
+        UserValidator validator = new UpdateValidatorFactory().createValidator(userMapper);
+        validator.validate(user, originalUser);
 
         try {
             userMapper.updateUser(user);
@@ -154,17 +147,8 @@ public class UserService {
         verificationCodeCache.storeCode(email, code);
 
         // 发送验证码邮件
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("2993946158@qq.com");
-        message.setTo(email);
-        message.setSubject("MyBLOG密码重置验证码");
-        message.setText("您的密码重置验证码是: " + code + "\n\n"
-                + "验证码有效期为5分钟，请尽快完成验证。\n"
-                + "如果您没有请求重置密码，请忽略此邮件。\n"
-//                + "可能是哪个小可爱连自己的邮箱都不记得发错了。\n"
-                + "\nHandsome WhyNot Promise");
-
-        mailSender.send(message);
+        EmailService emailService = EmailService.getInstance(mailSender);
+        emailService.sendPasswordResetEmail(email, code);
     }
 
     /**
@@ -207,7 +191,7 @@ public class UserService {
         // 清除缓存中的验证码
         verificationCodeCache.removeCode(request.getEmail());
 
-        // 发布密码重置事件
-        eventPublisherService.publishPasswordResetEvent(user);
+//        // 发布密码重置事件
+//        eventPublisherService.publishPasswordResetEvent(user);
     }
 }

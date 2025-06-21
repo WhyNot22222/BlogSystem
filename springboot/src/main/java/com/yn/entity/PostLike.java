@@ -5,6 +5,8 @@ import java.util.Date;
 public class PostLike {
     private Long id;
     private Long postId;
+    private Long userId;
+    private Date createdAt;
 
     public Long getId() {
         return id;
@@ -37,7 +39,4 @@ public class PostLike {
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
     }
-
-    private Long userId;
-    private Date createdAt;
 }

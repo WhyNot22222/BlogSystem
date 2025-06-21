@@ -22,7 +22,7 @@ export const fetchCover = async (userId, postId) => {
         return URL.createObjectURL(blob);
       } else {
         console.log('封面加载失败:', response.msg);
-        ElMessage.info('封面加载失败：' + response.msg + '，请检查是否有封面');
+        // ElMessage.info('封面加载失败：' + response.msg + '，请检查是否有封面');
         return ''; // 清空封面显示
       }
     } catch (error) {

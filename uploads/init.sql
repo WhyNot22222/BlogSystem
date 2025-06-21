@@ -26,10 +26,59 @@ CREATE TABLE IF NOT EXISTS user (
     phone VARCHAR(20) COMMENT '手机号码'
 );
 
+-- 复合索引：用户ID + 状态（覆盖“我的草稿”“我的已发布文章”查询）
+CREATE INDEX idx_user_status ON posts(user_id, status);
+
+-- 复合索引：发布时间 + 用户ID（加速分区内查询）
+CREATE INDEX idx_publish_user ON posts(published_at, user_id);
+
+-- 全文索引：标题 + 内容（支持关键词搜索，替代 LIKE 模糊查询）
+CREATE FULLTEXT INDEX idx_fulltext ON posts(title, content);
+
 INSERT INTO user (username, password, email, role) VALUES
     ('admin', 'admin', '2993946158@qq.com', 'admin'),
     ('promise', '123456', 'promise@nuaa.edu.cn', 'user'),
     ('yn', '222', 'yn@nju.edu.cn', 'user');
+
+-- 删除博客时同步删除相关数据
+DELIMITER //
+
+CREATE TRIGGER delete_post_related_data
+    AFTER DELETE ON posts
+    FOR EACH ROW
+BEGIN
+    DELETE FROM post_tags WHERE post_id = OLD.id;
+    DELETE FROM post_likes WHERE post_id = OLD.id;
+    DELETE FROM comments WHERE post_id = OLD.id;
+    DELETE FROM comment_likes WHERE comment_id IN (SELECT id FROM comments WHERE post_id = OLD.id);
+END //
+
+DELIMITER ;
+
+
+-- 自动发布调度
+DELIMITER //
+CREATE TRIGGER auto_publish_scheduled_posts
+    BEFORE INSERT ON posts
+    FOR EACH ROW
+BEGIN
+    -- 当设置未来发布时间时转为草案状态
+    IF NEW.published_at > NOW() THEN
+        SET NEW.status = 'draft';
+    END IF;
+END //
+
+CREATE EVENT process_scheduled_posts
+    ON SCHEDULE EVERY 1 MINUTE
+    DO
+    BEGIN
+        -- 定时发布任务
+        UPDATE posts
+        SET status = 'published'
+        WHERE status = 'draft'
+          AND published_at <= NOW();
+    END //
+DELIMITER ;
 
 -- 分类表
 CREATE TABLE IF NOT EXISTS categories (
@@ -37,6 +86,9 @@ CREATE TABLE IF NOT EXISTS categories (
     name VARCHAR(50) NOT NULL COMMENT '分类名称',
     description TEXT COMMENT '分类描述'
 );
+
+-- 确保标签名唯一，同时加速按名称查询标签
+CREATE UNIQUE INDEX idx_tag_name ON tags(name);
 
 INSERT INTO categories (name, description) VALUES
     ('资讯', ''),
@@ -159,6 +211,9 @@ CREATE TABLE IF NOT EXISTS tags (
     name VARCHAR(50) NOT NULL UNIQUE COMMENT '标签名称'
 );
 
+-- 确保标签名唯一，同时加速按名称查询标签
+CREATE UNIQUE INDEX idx_tag_name ON tags(name);
+
 -- 博客-标签连接表
 CREATE TABLE IF NOT EXISTS post_tags (
     post_id BIGINT NOT NULL COMMENT '博客ID',
@@ -167,6 +222,22 @@ CREATE TABLE IF NOT EXISTS post_tags (
     FOREIGN KEY (post_id) REFERENCES posts(id),
     FOREIGN KEY (tag_id) REFERENCES tags(id)
 );
+
+-- 优化 “查找某个标签下的所有文章”
+CREATE INDEX idx_tag_post ON post_tags(post_id);
+
+
+-- 删除标签时同步删除相关博客-标签连接
+DELIMITER //
+
+CREATE TRIGGER delete_tag_related_post_tags
+    AFTER DELETE ON tags
+    FOR EACH ROW
+BEGIN
+    DELETE FROM post_tags WHERE tag_id = OLD.id;
+END //
+
+DELIMITER ;
 
 DELIMITER //
 
@@ -193,6 +264,9 @@ CREATE TABLE IF NOT EXISTS comments (
     FOREIGN KEY (user_id) REFERENCES user(id)
 );
 
+-- 普通索引：按用户查评论（覆盖“我的评论列表”查询）
+CREATE INDEX idx_user_comment ON comments(user_id);
+
 INSERT INTO comments (post_id, user_id, content)
 VALUES (1, 1, '这篇文章很有帮助！');
 
@@ -209,6 +283,9 @@ CREATE TABLE IF NOT EXISTS post_likes (
     FOREIGN KEY (post_id) REFERENCES posts(id),
     FOREIGN KEY (user_id) REFERENCES user(id)
 );
+
+-- 加速统计每篇文章的收藏次数
+CREATE INDEX idx_post_comment_likes ON post_likes(post_id);
 
 -- 评论点赞表
 CREATE TABLE IF NOT EXISTS comment_likes (
@@ -233,6 +310,9 @@ CREATE TABLE IF NOT EXISTS favorites_collections (
     FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
 );
 
+-- 普通索引：按用户查收藏集（覆盖“我的收藏集列表”查询）
+CREATE INDEX idx_user_collection ON favorites_collections(user_id);
+
 -- 收藏表
 CREATE TABLE IF NOT EXISTS favorites (
     collection_id BIGINT NOT NULL COMMENT '收藏夹ID',
@@ -245,6 +325,9 @@ CREATE TABLE IF NOT EXISTS favorites (
     FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
 );
 
+-- 加速统计每篇文章的收藏次数
+CREATE INDEX idx_post_collection ON favorites(post_id);
+
 -- 关注表
 CREATE TABLE follow (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -255,3 +338,39 @@ CREATE TABLE follow (
     FOREIGN KEY (follower_id) REFERENCES user(id) ON DELETE CASCADE,
     FOREIGN KEY (followed_id) REFERENCES user(id) ON DELETE CASCADE
 );
+
+-- 博客详情视图
+CREATE VIEW v_post_preview AS
+SELECT
+    p.id AS post_id,
+    p.title,
+    p.summary,
+    p.cover_url,
+    p.views,
+    p.created_at,
+    u.id AS author_id,
+    u.username AS author_name,
+    u.avatar AS author_avatar,
+    c.name AS category_name,
+    (SELECT COUNT(*) FROM comments cm WHERE cm.post_id = p.id) AS comment_count,
+    (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) AS like_count,
+    (SELECT COUNT(*) FROM favorites f WHERE f.post_id = p.id) AS favorite_count
+FROM posts p
+         JOIN user u ON p.user_id = u.id
+         LEFT JOIN categories c ON p.category_id = c.id
+WHERE p.status = 'PUBLISHED' AND p.is_public = TRUE;
+
+
+-- 标签热度视图
+CREATE VIEW v_tag_heatmap AS
+SELECT
+    t.id AS tag_id,
+    t.name AS tag_name,
+    COUNT(pt.post_id) AS usage_count,
+    COUNT(DISTINCT p.user_id) AS author_count,
+    MAX(p.created_at) AS last_used
+FROM tags t
+         LEFT JOIN post_tags pt ON t.id = pt.tag_id
+         LEFT JOIN posts p ON pt.post_id = p.id
+GROUP BY t.id
+ORDER BY usage_count DESC;

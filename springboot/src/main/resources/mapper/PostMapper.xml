@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.yn.mapper.PostMapper">
 
     <insert id="insertPost" parameterType="com.yn.entity.Post" useGeneratedKeys="true" keyProperty="id">
@@ -106,18 +106,24 @@
             p.cover_url AS coverUrl,
             p.views,
             u.username AS authorName,
-        COUNT(pt.tag_id) AS common_tags
-        FROM posts p
-        JOIN post_tags pt ON p.id = pt.post_id
+            tag_counts.common_tag_count AS common_tags
+        FROM (
+            /* 标签聚合子查询 */
+            SELECT post_id, COUNT(*) AS common_tag_count
+            FROM post_tags
+            WHERE tag_id IN
+            <foreach item="tagId" collection="tagIds" open="(" separator="," close=")">
+                #{tagId}
+            </foreach>
+            GROUP BY post_id
+            ORDER BY common_tag_count DESC
+            LIMIT #{limit} * 3  /* 预取扩大样本 */
+        ) tag_counts
+        JOIN posts p ON p.id = tag_counts.post_id
         JOIN user u ON p.user_id = u.id
-        WHERE pt.tag_id IN
-        <foreach item="tagId" collection="tagIds" open="(" separator="," close=")">
-            #{tagId}
-        </foreach>
-        AND p.id != #{excludeId}
+        WHERE p.id != #{excludeId}
         AND p.status = 'published'
-        GROUP BY p.id
-        ORDER BY common_tags DESC
+        ORDER BY tag_counts.common_tag_count DESC
         LIMIT #{limit}
     </select>
 
@@ -130,10 +136,10 @@
             p.views,
             u.username AS authorName
         FROM posts p
-                 JOIN user u ON p.user_id = u.id
+        JOIN user u ON p.user_id = u.id
         WHERE p.user_id = #{authorId}
-          AND p.id != #{excludeId}
-          AND p.status = 'published'
+            AND p.id != #{excludeId}
+            AND p.status = 'published'
         ORDER BY p.published_at DESC
         LIMIT #{limit}
     </select>
@@ -147,9 +153,9 @@
             p.views,
             u.username AS authorName
         FROM posts p
-                 JOIN user u ON p.user_id = u.id
+            JOIN user u ON p.user_id = u.id
         WHERE p.id != #{excludeId}
-          AND p.status = 'published'
+            AND p.status = 'published'
         ORDER BY p.views DESC, p.published_at DESC
         LIMIT #{limit}
     </select>
